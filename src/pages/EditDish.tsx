@@ -1,28 +1,46 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
-import { useData } from "@/context/DataContext";
 import DishForm from "@/components/DishForm";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { selectDishes, selectDishNutrition } from "@/store/dishesSlice";
+import { setEditingDish } from "@/store/uiSlice";
 
 const EditDish = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { dishes, calculateDishNutrition } = useData();
+  const dishes = useAppSelector(selectDishes);
+  const dispatch = useAppDispatch();
   const isMobile = useIsMobile();
   
   const dish = id ? dishes.find(d => d.id === id) : undefined;
   const isNewDish = !id || !dish;
   
+  // Set the editing dish when component mounts
+  useEffect(() => {
+    dispatch(setEditingDish(dish || null));
+    
+    // Clean up when component unmounts
+    return () => {
+      dispatch(setEditingDish(null));
+    };
+  }, [dispatch, dish]);
+  
+  // Handle form completion
+  const handleComplete = () => {
+    navigate('/dishes');
+  };
+  
   // Calculate macronutrient calorie distribution for the chart
   const getMacroCaloriesData = () => {
     if (!dish) return [];
     
-    const nutrition = calculateDishNutrition(dish);
+    const nutrition = useAppSelector(state => selectDishNutrition(state, dish));
     const proteinCalories = nutrition.protein * 4;
     const carbsCalories = nutrition.carbs * 4;
     const fatCalories = nutrition.fat * 9;
@@ -59,10 +77,7 @@ const EditDish = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div>
-            <DishForm 
-              existingDish={dish} 
-              onComplete={() => navigate('/dishes')} 
-            />
+            <DishForm onComplete={handleComplete} />
           </div>
           
           {!isNewDish && dish && (

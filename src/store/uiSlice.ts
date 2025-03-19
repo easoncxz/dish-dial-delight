@@ -1,6 +1,7 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from './index';
+import { Ingredient, Dish } from '@/types';
 
 interface UiState {
   isMobileMenuOpen: boolean;
@@ -13,6 +14,9 @@ interface UiState {
   };
   importText: string;
   exportedData: string;
+  searchQuery: string;
+  editingIngredient: Ingredient | null;
+  editingDish: Dish | null;
 }
 
 const initialState: UiState = {
@@ -26,6 +30,9 @@ const initialState: UiState = {
   },
   importText: '',
   exportedData: '',
+  searchQuery: '',
+  editingIngredient: null,
+  editingDish: null,
 };
 
 export const uiSlice = createSlice({
@@ -54,6 +61,15 @@ export const uiSlice = createSlice({
     setExportedData: (state, action: PayloadAction<string>) => {
       state.exportedData = action.payload;
     },
+    setSearchQuery: (state, action: PayloadAction<string>) => {
+      state.searchQuery = action.payload;
+    },
+    setEditingIngredient: (state, action: PayloadAction<Ingredient | null>) => {
+      state.editingIngredient = action.payload;
+    },
+    setEditingDish: (state, action: PayloadAction<Dish | null>) => {
+      state.editingDish = action.payload;
+    },
   },
 });
 
@@ -63,6 +79,9 @@ export const {
   setDialogOpen,
   setImportText,
   setExportedData,
+  setSearchQuery,
+  setEditingIngredient,
+  setEditingDish,
 } = uiSlice.actions;
 
 // Selectors
@@ -71,5 +90,8 @@ export const selectSelectedDishId = (state: RootState) => state.ui.selectedDishI
 export const selectDialogOpen = (state: RootState) => state.ui.isDialogOpen;
 export const selectImportText = (state: RootState) => state.ui.importText;
 export const selectExportedData = (state: RootState) => state.ui.exportedData;
+export const selectSearchQuery = (state: RootState) => state.ui.searchQuery;
+export const selectEditingIngredient = (state: RootState) => state.ui.editingIngredient;
+export const selectEditingDish = (state: RootState) => state.ui.editingDish;
 
 export const uiReducer = uiSlice.reducer;

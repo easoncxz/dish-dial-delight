@@ -1,26 +1,34 @@
 
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { motion } from "framer-motion";
 import { Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { useData } from "@/context/DataContext";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toast } from "@/components/ui/use-toast";
+import { exportAppData, importAppData } from "@/store/thunks";
+import { 
+  selectDialogOpen, 
+  selectImportText, 
+  selectExportedData, 
+  setDialogOpen, 
+  setImportText, 
+  setExportedData 
+} from "@/store/uiSlice";
 
 const ImportExport = () => {
-  const { exportData, importData } = useData();
-  const [showExportDialog, setShowExportDialog] = useState(false);
-  const [showImportDialog, setShowImportDialog] = useState(false);
-  const [importText, setImportText] = useState("");
-  const [exportedData, setExportedData] = useState("");
+  const dispatch = useAppDispatch();
+  const dialogOpen = useAppSelector(selectDialogOpen);
+  const importText = useAppSelector(selectImportText);
+  const exportedData = useAppSelector(selectExportedData);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleExport = async () => {
     try {
-      const json = await exportData();
-      setExportedData(json);
-      setShowExportDialog(true);
+      const json = exportAppData()(dispatch);
+      dispatch(setExportedData(json));
+      dispatch(setDialogOpen({ key: 'exportDialog', value: true }));
     } catch (error) {
       console.error("Error exporting data:", error);
       toast({
@@ -41,7 +49,7 @@ const ImportExport = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    setShowExportDialog(false);
+    dispatch(setDialogOpen({ key: 'exportDialog', value: false }));
     
     toast({
       title: "Export successful",
@@ -57,8 +65,8 @@ const ImportExport = () => {
     reader.onload = (event) => {
       try {
         const content = event.target?.result as string;
-        setImportText(content);
-        setShowImportDialog(true);
+        dispatch(setImportText(content));
+        dispatch(setDialogOpen({ key: 'importDialog', value: true }));
       } catch (error) {
         console.error("Error reading file:", error);
         toast({
@@ -78,9 +86,9 @@ const ImportExport = () => {
   
   const confirmImport = async () => {
     try {
-      await importData(importText);
-      setShowImportDialog(false);
-      setImportText("");
+      await dispatch(importAppData(importText));
+      dispatch(setDialogOpen({ key: 'importDialog', value: false }));
+      dispatch(setImportText(""));
       toast({
         title: "Import successful",
         description: "Your data has been imported successfully."
@@ -94,60 +102,6 @@ const ImportExport = () => {
       });
     }
   };
-  
-  // Export Dialog
-  const ExportDialog = () => (
-    <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Export Data</DialogTitle>
-        </DialogHeader>
-        <div className="py-4">
-          <Textarea
-            value={exportedData}
-            readOnly
-            className="min-h-[200px] font-mono text-sm"
-          />
-        </div>
-        <DialogFooter>
-          <Button variant="secondary" onClick={() => setShowExportDialog(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleDownload}>
-            <Download className="mr-2 h-4 w-4" />
-            Download
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-  
-  // Import Dialog
-  const ImportDialog = () => (
-    <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Import Data</DialogTitle>
-        </DialogHeader>
-        <div className="py-4">
-          <Textarea
-            value={importText}
-            onChange={(e) => setImportText(e.target.value)}
-            className="min-h-[200px] font-mono text-sm"
-            placeholder="Paste your JSON data here..."
-          />
-        </div>
-        <DialogFooter>
-          <Button variant="secondary" onClick={() => setShowImportDialog(false)}>
-            Cancel
-          </Button>
-          <Button onClick={confirmImport}>
-            Import
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
   
   return (
     <>
@@ -175,8 +129,55 @@ const ImportExport = () => {
         </Button>
       </motion.div>
       
-      <ExportDialog />
-      <ImportDialog />
+      {/* Export Dialog */}
+      <Dialog open={dialogOpen.exportDialog} onOpenChange={(open) => dispatch(setDialogOpen({ key: 'exportDialog', value: open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Export Data</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              value={exportedData}
+              readOnly
+              className="min-h-[200px] font-mono text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => dispatch(setDialogOpen({ key: 'exportDialog', value: false }))}>
+              Cancel
+            </Button>
+            <Button onClick={handleDownload}>
+              <Download className="mr-2 h-4 w-4" />
+              Download
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Import Dialog */}
+      <Dialog open={dialogOpen.importDialog} onOpenChange={(open) => dispatch(setDialogOpen({ key: 'importDialog', value: open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Import Data</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              value={importText}
+              onChange={(e) => dispatch(setImportText(e.target.value))}
+              className="min-h-[200px] font-mono text-sm"
+              placeholder="Paste your JSON data here..."
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => dispatch(setDialogOpen({ key: 'importDialog', value: false }))}>
+              Cancel
+            </Button>
+            <Button onClick={confirmImport}>
+              Import
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

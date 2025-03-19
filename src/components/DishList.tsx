@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Edit, Trash2, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,15 +7,26 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { useData } from "@/context/DataContext";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Dish } from "@/types";
 import DishForm from "./DishForm";
+import { selectDishes, deleteDish, selectDishNutrition } from "@/store/dishesSlice";
+import { selectIngredients } from "@/store/ingredientsSlice";
+import { 
+  selectDialogOpen, 
+  selectSearchQuery, 
+  selectEditingDish,
+  setDialogOpen, 
+  setSearchQuery, 
+  setEditingDish 
+} from "@/store/uiSlice";
 
 const DishList = () => {
-  const { dishes, ingredients, deleteDish, calculateDishNutrition } = useData();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingDish, setEditingDish] = useState<Dish | null>(null);
+  const dispatch = useAppDispatch();
+  const dishes = useAppSelector(selectDishes);
+  const ingredients = useAppSelector(selectIngredients);
+  const dialogOpen = useAppSelector(selectDialogOpen);
+  const searchQuery = useAppSelector(selectSearchQuery);
   
   const filteredDishes = useMemo(() => {
     return dishes.filter(dish => 
@@ -24,13 +35,21 @@ const DishList = () => {
   }, [dishes, searchQuery]);
   
   const handleEdit = (dish: Dish) => {
-    setEditingDish(dish);
-    setIsDialogOpen(true);
+    dispatch(setEditingDish(dish));
+    dispatch(setDialogOpen({ key: 'dishForm', value: true }));
   };
   
   const handleAddNew = () => {
-    setEditingDish(null);
-    setIsDialogOpen(true);
+    dispatch(setEditingDish(null));
+    dispatch(setDialogOpen({ key: 'dishForm', value: true }));
+  };
+  
+  const handleCloseDialog = () => {
+    dispatch(setDialogOpen({ key: 'dishForm', value: false }));
+  };
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchQuery(e.target.value));
   };
   
   const getIngredientName = (id: string) => {
@@ -47,7 +66,7 @@ const DishList = () => {
             <Input
               placeholder="Search dishes..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-9 w-full sm:w-[300px]"
             />
           </div>
@@ -66,7 +85,7 @@ const DishList = () => {
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             >
               {filteredDishes.map((dish) => {
-                const nutrition = calculateDishNutrition(dish);
+                const nutrition = useAppSelector(state => selectDishNutrition(state, dish));
                 
                 return (
                   <motion.div
@@ -131,7 +150,7 @@ const DishList = () => {
                             variant="outline" 
                             size="sm" 
                             className="flex-1 text-destructive hover:text-destructive-foreground hover:bg-destructive"
-                            onClick={() => deleteDish(dish.id)}
+                            onClick={() => dispatch(deleteDish(dish.id))}
                           >
                             <Trash2 className="h-4 w-4 mr-1" />
                             Delete
@@ -168,17 +187,14 @@ const DishList = () => {
         </AnimatePresence>
       </div>
       
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={dialogOpen.dishForm} onOpenChange={(open) => dispatch(setDialogOpen({ key: 'dishForm', value: open }))}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingDish ? "Edit Dish" : "Create New Dish"}
+              {useAppSelector(selectEditingDish) ? "Edit Dish" : "Create New Dish"}
             </DialogTitle>
           </DialogHeader>
-          <DishForm 
-            existingDish={editingDish} 
-            onComplete={() => setIsDialogOpen(false)} 
-          />
+          <DishForm onComplete={handleCloseDialog} />
         </DialogContent>
       </Dialog>
     </>

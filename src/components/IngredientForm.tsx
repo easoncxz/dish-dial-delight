@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { PlusCircle, XCircle, Info } from "lucide-react";
@@ -12,7 +11,16 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Ingredient, NutrientMap } from "@/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { addIngredient, updateIngredient } from "@/store/ingredientsSlice";
-import { RootState } from "@/store";
+import { selectEditingIngredient } from "@/store/uiSlice";
+import { 
+  selectIngredientForm, 
+  setIngredientForm, 
+  updateIngredientField,
+  addIngredientNutrient,
+  removeIngredientNutrient,
+  updateIngredientNutrient
+} from "@/store/formSlice";
+import { toast } from '@/components/ui/use-toast';
 
 interface IngredientFormProps {
   onComplete: () => void;
@@ -20,80 +28,52 @@ interface IngredientFormProps {
 
 const IngredientForm = ({ onComplete }: IngredientFormProps) => {
   const dispatch = useAppDispatch();
-  const existingIngredient = useAppSelector((state: RootState) => state.ui.editingIngredient);
-  
-  // Instead of useState, get form state from Redux store
-  const formState = useAppSelector((state: RootState) => state.form?.ingredient || {
-    name: "",
-    calories: "",
-    protein: "",
-    carbs: "",
-    fat: "",
-    fiber: "",
-    nutrients: []
-  });
+  const existingIngredient = useAppSelector(selectEditingIngredient);
+  const formState = useAppSelector(selectIngredientForm);
   
   // Initialize form when component mounts or existingIngredient changes
   useEffect(() => {
     if (existingIngredient) {
-      dispatch({ 
-        type: 'form/setIngredientForm', 
-        payload: {
-          name: existingIngredient.name,
-          calories: existingIngredient.calories.toString(),
-          protein: existingIngredient.protein.toString(),
-          carbs: existingIngredient.carbs.toString(),
-          fat: existingIngredient.fat.toString(),
-          fiber: existingIngredient.fiber.toString(),
-          nutrients: Object.entries(existingIngredient.nutrients).map(([key, nutrient]) => ({
-            key,
-            value: nutrient.value.toString(),
-            unit: nutrient.unit
-          }))
-        }
-      });
+      dispatch(setIngredientForm({
+        name: existingIngredient.name,
+        calories: existingIngredient.calories.toString(),
+        protein: existingIngredient.protein.toString(),
+        carbs: existingIngredient.carbs.toString(),
+        fat: existingIngredient.fat.toString(),
+        fiber: existingIngredient.fiber.toString(),
+        nutrients: Object.entries(existingIngredient.nutrients).map(([key, nutrient]) => ({
+          key,
+          value: nutrient.value.toString(),
+          unit: nutrient.unit
+        }))
+      }));
     } else {
-      dispatch({ 
-        type: 'form/setIngredientForm', 
-        payload: {
-          name: "",
-          calories: "",
-          protein: "",
-          carbs: "",
-          fat: "",
-          fiber: "",
-          nutrients: []
-        }
-      });
+      dispatch(setIngredientForm({
+        name: "",
+        calories: "",
+        protein: "",
+        carbs: "",
+        fat: "",
+        fiber: "",
+        nutrients: []
+      }));
     }
   }, [existingIngredient, dispatch]);
   
   const handleInputChange = (field: string, value: string) => {
-    dispatch({
-      type: 'form/updateIngredientField',
-      payload: { field, value }
-    });
+    dispatch(updateIngredientField({ field, value }));
   };
   
   const handleAddNutrient = () => {
-    dispatch({
-      type: 'form/addIngredientNutrient',
-      payload: { key: "", value: "", unit: "mg" }
-    });
+    dispatch(addIngredientNutrient({ key: "", value: "", unit: "mg" }));
   };
   
   const handleRemoveNutrient = (index: number) => {
-    dispatch({
-      type: 'form/removeIngredientNutrient',
-      payload: index
-    });
+    dispatch(removeIngredientNutrient(index));
   };
   
   const handleNutrientChange = (index: number, field: "key" | "value" | "unit", value: string) => {
-    dispatch({
-      type: 'form/updateIngredientNutrient',
-      payload: { index, field, value }
-    });
+    dispatch(updateIngredientNutrient({ index, field, value }));
   };
   
   const handleSubmit = (e: React.FormEvent) => {

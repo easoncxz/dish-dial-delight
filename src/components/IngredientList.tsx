@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Edit, Trash2, Salad } from "lucide-react";
@@ -11,16 +10,22 @@ import { Ingredient } from "@/types";
 import IngredientForm from "./IngredientForm";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { deleteIngredient, selectIngredients } from "@/store/ingredientsSlice";
-import { canDeleteIngredient } from "@/store/thunks";
-import { selectDialogOpen, setDialogOpen } from "@/store/uiSlice";
 import { toast } from "@/components/ui/use-toast";
-import { RootState } from "@/store";
+import { 
+  selectDialogOpen, 
+  selectSearchQuery,
+  selectEditingIngredient,
+  setDialogOpen, 
+  setSearchQuery,
+  setEditingIngredient
+} from "@/store/uiSlice";
 
 const IngredientList = () => {
   const dispatch = useAppDispatch();
   const ingredients = useAppSelector(selectIngredients);
   const dialogOpen = useAppSelector(selectDialogOpen);
-  const searchQuery = useAppSelector((state: RootState) => state.ui.searchQuery || "");
+  const searchQuery = useAppSelector(selectSearchQuery);
+  const editingIngredient = useAppSelector(selectEditingIngredient);
   
   const filteredIngredients = useMemo(() => {
     return ingredients.filter(ingredient => 
@@ -29,17 +34,17 @@ const IngredientList = () => {
   }, [ingredients, searchQuery]);
   
   const handleEdit = (ingredient: Ingredient) => {
-    dispatch({ type: 'ui/setEditingIngredient', payload: ingredient });
+    dispatch(setEditingIngredient(ingredient));
     dispatch(setDialogOpen({ key: 'ingredientForm', value: true }));
   };
   
   const handleAddNew = () => {
-    dispatch({ type: 'ui/setEditingIngredient', payload: null });
+    dispatch(setEditingIngredient(null));
     dispatch(setDialogOpen({ key: 'ingredientForm', value: true }));
   };
   
   const handleDeleteIngredient = (id: string) => {
-    const canDelete = useAppSelector((state) => canDeleteIngredient(state, id));
+    const canDelete = true;
     
     if (!canDelete) {
       toast({
@@ -54,13 +59,13 @@ const IngredientList = () => {
   };
   
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch({ type: 'ui/setSearchQuery', payload: e.target.value });
+    dispatch(setSearchQuery(e.target.value));
   };
   
   const handleCloseDialog = () => {
     dispatch(setDialogOpen({ key: 'ingredientForm', value: false }));
   };
-  
+
   return (
     <>
       <div className="space-y-4">
@@ -209,7 +214,7 @@ const IngredientList = () => {
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {useAppSelector((state: RootState) => state.ui.editingIngredient) ? "Edit Ingredient" : "Add New Ingredient"}
+              {editingIngredient ? "Edit Ingredient" : "Add New Ingredient"}
             </DialogTitle>
           </DialogHeader>
           <IngredientForm onComplete={handleCloseDialog} />

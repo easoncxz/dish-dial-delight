@@ -1,22 +1,40 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
-import { useData } from "@/context/DataContext";
 import IngredientForm from "@/components/IngredientForm";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { selectIngredients } from "@/store/ingredientsSlice";
+import { setEditingIngredient } from "@/store/uiSlice";
 
 const EditIngredient = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { ingredients } = useData();
+  const ingredients = useAppSelector(selectIngredients);
+  const dispatch = useAppDispatch();
   const isMobile = useIsMobile();
   
   const ingredient = id ? ingredients.find(ing => ing.id === id) : undefined;
   const isNewIngredient = !id || !ingredient;
+  
+  // Set the editing ingredient when component mounts
+  useEffect(() => {
+    dispatch(setEditingIngredient(ingredient || null));
+    
+    // Clean up when component unmounts
+    return () => {
+      dispatch(setEditingIngredient(null));
+    };
+  }, [dispatch, ingredient]);
+  
+  // Handle form completion
+  const handleComplete = () => {
+    navigate('/ingredients');
+  };
   
   // Calculate macronutrient calorie distribution for the chart
   const getMacroCaloriesData = () => {
@@ -58,10 +76,7 @@ const EditIngredient = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div>
-            <IngredientForm 
-              existingIngredient={ingredient} 
-              onComplete={() => navigate('/ingredients')} 
-            />
+            <IngredientForm onComplete={handleComplete} />
           </div>
           
           {!isNewIngredient && ingredient && (

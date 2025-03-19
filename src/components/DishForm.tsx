@@ -1,86 +1,94 @@
+
 import { useState, useEffect, useMemo } from "react";
-import { useData } from "@/context/DataContext";
 import { v4 as uuidv4 } from "uuid";
-import { PlusCircle, XCircle, Info, ChevronRight, ChevronLeft } from "lucide-react";
+import { PlusCircle, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import NutritionDisplay from "./NutritionDisplay";
 import { Dish, DishIngredient } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { selectIngredients } from "@/store/ingredientsSlice";
+import { addDish, updateDish, selectDishNutrition } from "@/store/dishesSlice";
+import { selectEditingDish } from "@/store/uiSlice";
+import { 
+  selectDishForm, 
+  setDishForm, 
+  updateDishField, 
+  setDishIngredients, 
+  updateDishIngredient 
+} from "@/store/formSlice";
 
 interface DishFormProps {
-  existingDish?: Dish | null;
   onComplete: () => void;
 }
 
-const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
-  const { ingredients, addDish, updateDish, calculateDishNutrition } = useData();
+const DishForm = ({ onComplete }: DishFormProps) => {
+  const dispatch = useAppDispatch();
+  const ingredients = useAppSelector(selectIngredients);
+  const existingDish = useAppSelector(selectEditingDish);
+  const formState = useAppSelector(selectDishForm);
   
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [dishIngredients, setDishIngredients] = useState<DishIngredient[]>([]);
   const [selectedIngredientId, setSelectedIngredientId] = useState("");
   
+  // Initialize form state when component mounts or existingDish changes
+  useEffect(() => {
+    if (existingDish) {
+      dispatch(setDishForm({
+        name: existingDish.name,
+        description: existingDish.description || "",
+        ingredients: existingDish.ingredients
+      }));
+    } else {
+      dispatch(setDishForm({
+        name: "",
+        description: "",
+        ingredients: []
+      }));
+    }
+  }, [existingDish, dispatch]);
+  
+  // Calculate nutrition based on current form state
   const nutrition = useMemo(() => {
     const dishData: Dish = {
       id: existingDish?.id || "temp",
-      name,
-      description,
-      ingredients: dishIngredients
+      name: formState.name,
+      description: formState.description,
+      ingredients: formState.ingredients
     };
-    return calculateDishNutrition(dishData);
-  }, [dishIngredients, calculateDishNutrition, name, description, existingDish?.id]);
-  
-  useEffect(() => {
-    if (existingDish) {
-      setName(existingDish.name);
-      setDescription(existingDish.description || "");
-      setDishIngredients(existingDish.ingredients);
-    } else {
-      resetForm();
-    }
-  }, [existingDish]);
-  
-  const resetForm = () => {
-    setName("");
-    setDescription("");
-    setDishIngredients([]);
-    setSelectedIngredientId("");
-  };
+    return useAppSelector(state => selectDishNutrition(state, dishData));
+  }, [formState, existingDish?.id]);
   
   const handleAddIngredient = () => {
     if (!selectedIngredientId) return;
     
-    const exists = dishIngredients.some(item => item.ingredientId === selectedIngredientId);
+    const exists = formState.ingredients.some(item => item.ingredientId === selectedIngredientId);
     
     if (!exists) {
-      setDishIngredients([
-        ...dishIngredients,
+      const updatedIngredients = [
+        ...formState.ingredients,
         { ingredientId: selectedIngredientId, quantity: 100 }
-      ]);
+      ];
+      dispatch(setDishIngredients(updatedIngredients));
       setSelectedIngredientId("");
     }
   };
   
   const handleRemoveIngredient = (index: number) => {
-    const updatedIngredients = [...dishIngredients];
+    const updatedIngredients = [...formState.ingredients];
     updatedIngredients.splice(index, 1);
-    setDishIngredients(updatedIngredients);
+    dispatch(setDishIngredients(updatedIngredients));
   };
   
   const handleQuantityChange = (index: number, value: number[]) => {
-    const updatedIngredients = [...dishIngredients];
-    updatedIngredients[index] = {
-      ...updatedIngredients[index],
+    dispatch(updateDishIngredient({
+      index,
       quantity: value[0]
-    };
-    setDishIngredients(updatedIngredients);
+    }));
   };
   
   const getIngredientName = (id: string) => {
@@ -88,27 +96,30 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
     return ingredient ? ingredient.name : "Unknown Ingredient";
   };
   
+  const handleInputChange = (field: string, value: string) => {
+    dispatch(updateDishField({ field, value }));
+  };
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || dishIngredients.length === 0) {
+    if (!formState.name || formState.ingredients.length === 0) {
       return;
     }
     
     const dishData: Dish = {
       id: existingDish?.id || uuidv4(),
-      name,
-      description,
-      ingredients: dishIngredients
+      name: formState.name,
+      description: formState.description,
+      ingredients: formState.ingredients
     };
     
     if (existingDish) {
-      updateDish(dishData);
+      dispatch(updateDish(dishData));
     } else {
-      addDish(dishData);
+      dispatch(addDish(dishData));
     }
     
-    resetForm();
     onComplete();
   };
   
@@ -120,8 +131,8 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
           <Input
             id="name"
             placeholder="e.g., Chicken Stir Fry"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={formState.name}
+            onChange={(e) => handleInputChange("name", e.target.value)}
             required
           />
         </div>
@@ -131,8 +142,8 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
           <Textarea
             id="description"
             placeholder="Add notes or description..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            value={formState.description}
+            onChange={(e) => handleInputChange("description", e.target.value)}
             rows={2}
           />
         </div>
@@ -149,7 +160,7 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
               <SelectContent>
                 {ingredients.length > 0 ? (
                   ingredients
-                    .filter(ing => !dishIngredients.some(item => item.ingredientId === ing.id))
+                    .filter(ing => !formState.ingredients.some(item => item.ingredientId === ing.id))
                     .map(ingredient => (
                       <SelectItem key={ingredient.id} value={ingredient.id}>
                         {ingredient.name}
@@ -174,9 +185,9 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
         </div>
         
         <div>
-          {dishIngredients.length > 0 ? (
+          {formState.ingredients.length > 0 ? (
             <div className="space-y-3">
-              {dishIngredients.map((item, index) => (
+              {formState.ingredients.map((item, index) => (
                 <Card key={index}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
@@ -234,7 +245,7 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
         </div>
       </div>
       
-      {dishIngredients.length > 0 && (
+      {formState.ingredients.length > 0 && (
         <div>
           <h3 className="text-lg font-medium mb-3">Nutrition Preview</h3>
           <NutritionDisplay nutrition={nutrition} />
@@ -247,7 +258,7 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
         </Button>
         <Button 
           type="submit" 
-          disabled={!name || dishIngredients.length === 0}
+          disabled={!formState.name || formState.ingredients.length === 0}
         >
           {existingDish ? "Update" : "Create"} Dish
         </Button>
