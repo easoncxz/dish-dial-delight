@@ -1,6 +1,5 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
 import { 
   Home, 
   Apple, 
@@ -97,21 +96,13 @@ const Navbar = () => {
         <div className="w-8 h-8"></div>
       </nav>
       
-      {/* Mobile menu */}
+      {/* Mobile menu - simplified version without animation libraries */}
       {isMobileMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+        <div 
           className="md:hidden fixed z-40 inset-0 bg-black/40"
           onClick={() => setIsMobileMenuOpen(false)}
         >
-          <motion.div
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+          <div 
             onClick={(e) => e.stopPropagation()}
             className="absolute top-0 left-0 bottom-0 w-[250px] bg-card shadow-xl"
           >
@@ -150,8 +141,8 @@ const Navbar = () => {
                 );
               })}
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
     </>
   );

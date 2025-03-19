@@ -18,8 +18,8 @@ const Dishes = () => {
         title="Dishes" 
         description="Create and manage your favorite dishes" 
       />
-      <main className={isMobile ? "px-3" : "container max-w-6xl"}>
-        <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'} mb-4 md:mb-6`}>
+      <main className={isMobile ? "px-2" : "container max-w-6xl"}>
+        <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-between items-center'} mb-3 md:mb-6`}>
           <Button 
             onClick={() => navigate("/dishes/new")}
             className="flex items-center gap-2"

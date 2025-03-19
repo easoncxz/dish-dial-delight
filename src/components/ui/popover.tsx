@@ -28,7 +28,7 @@ const PopoverContent = React.forwardRef<
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2",
           "data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-          isMobile ? "w-[calc(100vw-2rem)] p-3" : "w-72 p-4",
+          isMobile ? "w-[calc(100vw-1rem)] p-2 max-h-[80vh] overflow-y-auto" : "w-72 p-4",
           className
         )}
         {...props}
