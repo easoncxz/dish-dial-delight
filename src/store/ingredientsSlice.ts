@@ -29,63 +29,15 @@ export const ingredientsSlice = createSlice({
         id: action.payload.id || uuidv4()
       };
       state.items.push(newIngredient);
-      
-      // Save to IndexedDB
-      storeIngredients(state.items).catch(error => {
-        console.error('Error saving ingredients:', error);
-        toast({
-          variant: "destructive",
-          title: "Error saving ingredient",
-          description: "There was a problem saving your ingredient data."
-        });
-      });
-      
-      toast({
-        title: "Ingredient added",
-        description: `${newIngredient.name} has been added to your ingredients.`
-      });
     },
     updateIngredient: (state, action: PayloadAction<Ingredient>) => {
       const index = state.items.findIndex(item => item.id === action.payload.id);
       if (index !== -1) {
         state.items[index] = action.payload;
-        
-        // Save to IndexedDB
-        storeIngredients(state.items).catch(error => {
-          console.error('Error saving ingredients:', error);
-          toast({
-            variant: "destructive",
-            title: "Error updating ingredient",
-            description: "There was a problem saving your ingredient data."
-          });
-        });
-        
-        toast({
-          title: "Ingredient updated",
-          description: `${action.payload.name} has been updated.`
-        });
       }
     },
     deleteIngredient: (state, action: PayloadAction<string>) => {
-      const deletedIngredient = state.items.find(item => item.id === action.payload);
       state.items = state.items.filter(item => item.id !== action.payload);
-      
-      // Save to IndexedDB
-      storeIngredients(state.items).catch(error => {
-        console.error('Error saving ingredients:', error);
-        toast({
-          variant: "destructive",
-          title: "Error deleting ingredient",
-          description: "There was a problem saving your ingredient data."
-        });
-      });
-      
-      if (deletedIngredient) {
-        toast({
-          title: "Ingredient deleted",
-          description: `${deletedIngredient.name} has been removed.`
-        });
-      }
     },
     setIngredientsLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;

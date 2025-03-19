@@ -60,28 +60,49 @@ export function useToast() {
 }
 
 // Export a standalone toast function for easier access
-export const toast = (options: ToastOptions) => {
-  store.dispatch(addToast(options));
+export const toast = (() => {
+  // This creates a closure that we'll use to store the latest dispatch function
+  let currentDispatch: any = null;
+  let currentGetToasts: (() => ToastType[]) | null = null;
   
-  const id = store.getState().toast.toasts[store.getState().toast.toasts.length - 1]?.id;
+  // This function can be called to set the dispatch function from the outside
+  const setDispatch = (dispatch: any, getToasts: () => ToastType[]) => {
+    currentDispatch = dispatch;
+    currentGetToasts = getToasts;
+  };
   
-  // Auto-dismiss after duration
-  if (id) {
-    const duration = options.duration || DEFAULT_TOAST_DURATION;
-    setTimeout(() => {
-      store.dispatch(dismissToast(id));
-    }, duration);
+  // This is the actual toast function
+  const toastFn = (options: ToastOptions) => {
+    if (!currentDispatch) {
+      console.error('Toast was called before Redux was initialized');
+      return { id: '', update: () => {}, dismiss: () => {} };
+    }
+    
+    const action = addToast(options);
+    currentDispatch(action);
+    
+    const id = action.payload?.id;
+    
+    // Auto-dismiss after duration
+    if (id) {
+      const duration = options.duration || DEFAULT_TOAST_DURATION;
+      setTimeout(() => {
+        currentDispatch(dismissToast(id));
+      }, duration);
+    
+      return {
+        id,
+        update: (props: Partial<ToastOptions>) => 
+          currentDispatch(updateToast({ ...props, id })),
+        dismiss: () => currentDispatch(dismissToast(id)),
+      };
+    }
+    
+    return { id: '', update: () => {}, dismiss: () => {} };
+  };
   
-    return {
-      id,
-      update: (props: Partial<ToastOptions>) => 
-        store.dispatch(updateToast({ ...props, id })),
-      dismiss: () => store.dispatch(dismissToast(id)),
-    };
-  }
+  // Add the setDispatch method to the toast function
+  toastFn.setDispatch = setDispatch;
   
-  return { id: '', update: () => {}, dismiss: () => {} };
-};
-
-// Need to import store here
-import { store } from '@/store';
+  return toastFn;
+})();

@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Dish } from "@/types";
 import DishForm from "./DishForm";
-import { selectDishes, deleteDish, selectDishNutrition } from "@/store/dishesSlice";
+import { selectDishes, selectDishNutrition } from "@/store/dishesSlice";
+import { deleteDish } from "@/store/thunks";
 import { selectIngredients } from "@/store/ingredientsSlice";
 import { 
   selectDialogOpen, 

@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Ingredient } from "@/types";
 import IngredientForm from "./IngredientForm";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { deleteIngredient, selectIngredients } from "@/store/ingredientsSlice";
+import { selectIngredients } from "@/store/ingredientsSlice";
+import { deleteIngredient } from "@/store/thunks";
 import { toast } from "@/components/ui/use-toast";
 import { 
   selectDialogOpen, 

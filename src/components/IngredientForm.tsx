@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Ingredient, NutrientMap } from "@/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addIngredient, updateIngredient } from "@/store/ingredientsSlice";
+import { addIngredient, updateIngredient } from "@/store/thunks";
 import { selectEditingIngredient } from "@/store/uiSlice";
 import { 
   selectIngredientForm, 
@@ -110,7 +110,10 @@ const IngredientForm = ({ onComplete }: IngredientFormProps) => {
       dispatch(addIngredient(ingredientData));
     }
     
-    onComplete();
+    // Delay the onComplete call to ensure Redux state updates first
+    setTimeout(() => {
+      onComplete();
+    }, 0);
   };
   
   return (

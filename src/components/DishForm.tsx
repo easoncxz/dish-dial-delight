@@ -13,7 +13,8 @@ import NutritionDisplay from "./NutritionDisplay";
 import { Dish, DishIngredient } from "@/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIngredients } from "@/store/ingredientsSlice";
-import { addDish, updateDish, selectDishNutrition } from "@/store/dishesSlice";
+import { selectDishNutrition } from "@/store/dishesSlice";
+import { addDish, updateDish } from "@/store/thunks";
 import { selectEditingDish } from "@/store/uiSlice";
 import { 
   selectDishForm, 
@@ -120,7 +121,10 @@ const DishForm = ({ onComplete }: DishFormProps) => {
       dispatch(addDish(dishData));
     }
     
-    onComplete();
+    // Delay the onComplete call to ensure Redux state updates first
+    setTimeout(() => {
+      onComplete();
+    }, 0);
   };
   
   return (
