@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Apple, Utensils, ChevronRight, Plus } from "lucide-react";
 import NutritionDisplay from "@/components/NutritionDisplay";
-import { useData } from "@/context/DataContext";
 import Header from "@/components/Header";
+import { useAppSelector } from "@/store/hooks";
+import { calculateDishNutrition } from "@/utils/calculations";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { dishes, ingredients, calculateDishNutrition } = useData();
+  const dishes = useAppSelector((state) => state.dishes.items);
+  const ingredients = useAppSelector((state) => state.ingredients.items);
   const [selectedDishId, setSelectedDishId] = useState<string>("");
   
   const selectedDish = useMemo(() => {
@@ -21,8 +23,8 @@ const Index = () => {
   
   const nutrition = useMemo(() => {
     if (!selectedDish) return null;
-    return calculateDishNutrition(selectedDish);
-  }, [selectedDish, calculateDishNutrition]);
+    return calculateDishNutrition(selectedDish, ingredients);
+  }, [selectedDish, ingredients]);
   
   const hasData = dishes.length > 0 || ingredients.length > 0;
   

@@ -26,7 +26,8 @@ const ImportExport = () => {
   
   const handleExport = async () => {
     try {
-      const json = exportAppData()(dispatch);
+      // Get the state and export data
+      const json = dispatch(exportAppData());
       dispatch(setExportedData(json));
       dispatch(setDialogOpen({ key: 'exportDialog', value: true }));
     } catch (error) {

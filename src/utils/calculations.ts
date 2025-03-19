@@ -39,3 +39,27 @@ export const calculateDishNutrition = (dish: Dish, ingredients: Ingredient[]): N
 
   return nutrition;
 };
+
+// Calculate the percentage contribution of each macronutrient to total calories
+export const calculateMacroPercentages = (nutrition: NutritionSummary) => {
+  const { protein, carbs, fat } = nutrition;
+  
+  // Calculate calories from each macronutrient
+  const proteinCalories = protein * 4;
+  const carbsCalories = carbs * 4;
+  const fatCalories = fat * 9;
+  
+  // Calculate total calories from macros
+  const totalMacroCalories = proteinCalories + carbsCalories + fatCalories;
+  
+  // Calculate percentages (default to 0 if total is 0 to avoid division by zero)
+  const proteinPercentage = totalMacroCalories > 0 ? Math.round((proteinCalories / totalMacroCalories) * 100) : 0;
+  const carbsPercentage = totalMacroCalories > 0 ? Math.round((carbsCalories / totalMacroCalories) * 100) : 0;
+  const fatPercentage = totalMacroCalories > 0 ? Math.round((fatCalories / totalMacroCalories) * 100) : 0;
+  
+  return [
+    { label: "Protein", value: proteinPercentage, color: "#4ade80" }, // green
+    { label: "Carbs", value: carbsPercentage, color: "#60a5fa" },    // blue
+    { label: "Fat", value: fatPercentage, color: "#f97316" }         // orange
+  ];
+};

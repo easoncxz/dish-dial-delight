@@ -33,8 +33,8 @@ export const canDeleteIngredient = (state: RootState, ingredientId: string) => {
   );
 };
 
-// Function to export data
-export const exportAppData = () => (getState: () => RootState) => {
+// Function to export data - returning a string directly
+export const exportAppData = () => (dispatch: AppDispatch, getState: () => RootState) => {
   const state = getState();
   const data = {
     ingredients: state.ingredients.items,
