@@ -8,7 +8,7 @@ import {
   Menu, 
   X 
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -17,21 +17,11 @@ const Navbar = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
   
-  useEffect(() => {
-    // Close mobile menu when route changes
-    setIsMobileMenuOpen(false);
-    
+  const toggleMobileMenu = (open: boolean) => {
+    setIsMobileMenuOpen(open);
     // Prevent body scrolling when mobile menu is open
-    if (isMobileMenuOpen && isMobile) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [location.pathname, isMobileMenuOpen, isMobile]);
+    document.body.style.overflow = open ? 'hidden' : '';
+  };
   
   const routes = [
     { path: "/", label: "Dashboard", icon: Home },
@@ -80,7 +70,7 @@ const Navbar = () => {
       {/* Mobile header */}
       <nav className="md:hidden fixed z-30 top-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-b border-border h-14 flex items-center px-3">
         <button 
-          onClick={() => setIsMobileMenuOpen(true)}
+          onClick={() => toggleMobileMenu(true)}
           className="w-8 h-8 flex items-center justify-center text-muted-foreground rounded-md hover:bg-secondary"
         >
           <Menu size={20} />
@@ -96,16 +86,10 @@ const Navbar = () => {
         <div className="w-8 h-8"></div>
       </nav>
       
-      {/* Mobile menu - simplified version without animation libraries */}
+      {/* Mobile menu - very simplified version */}
       {isMobileMenuOpen && (
-        <div 
-          className="md:hidden fixed z-40 inset-0 bg-black/40"
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className="absolute top-0 left-0 bottom-0 w-[250px] bg-card shadow-xl"
-          >
+        <div className="md:hidden fixed inset-0 z-40 bg-black/40">
+          <div className="absolute top-0 left-0 bottom-0 w-[250px] bg-card shadow-xl">
             <div className="p-4 flex justify-between items-center border-b border-border">
               <div className="flex items-center space-x-2">
                 <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
@@ -114,7 +98,7 @@ const Navbar = () => {
                 <span className="text-lg font-display font-semibold">NutriPlan</span>
               </div>
               <button
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => toggleMobileMenu(false)}
                 className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
               >
                 <X size={16} />
@@ -128,6 +112,7 @@ const Navbar = () => {
                   <Link
                     key={route.path}
                     to={route.path}
+                    onClick={() => toggleMobileMenu(false)}
                     className={cn(
                       "flex items-center px-3 py-2.5 mb-1 rounded-md text-base font-medium transition-all",
                       isActive 
