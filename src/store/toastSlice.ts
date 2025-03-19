@@ -25,17 +25,25 @@ export const toastSlice = createSlice({
   name: 'toast',
   initialState,
   reducers: {
-    addToast: (state, action: PayloadAction<Omit<Toast, 'id' | 'open'>>) => {
-      const id = nanoid();
-      // Limit the number of toasts to 1
-      if (state.toasts.length >= 1) {
-        state.toasts = [];
+    addToast: {
+      reducer: (state, action: PayloadAction<Toast>) => {
+        // Limit the number of toasts to 1
+        if (state.toasts.length >= 1) {
+          state.toasts = [];
+        }
+        state.toasts.push(action.payload);
+        return state;
+      },
+      prepare: (toast: Omit<Toast, 'id' | 'open'>) => {
+        const id = nanoid();
+        return {
+          payload: {
+            ...toast,
+            id,
+            open: true,
+          }
+        };
       }
-      state.toasts.push({
-        ...action.payload,
-        id,
-        open: true,
-      });
     },
     updateToast: (state, action: PayloadAction<Partial<Toast> & { id: string }>) => {
       const { id, ...data } = action.payload;
