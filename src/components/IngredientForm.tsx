@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useData } from "@/context/DataContext";
+
+import { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { PlusCircle, XCircle, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,79 +10,101 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Ingredient, NutrientMap } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { addIngredient, updateIngredient } from "@/store/ingredientsSlice";
+import { RootState } from "@/store";
 
 interface IngredientFormProps {
-  existingIngredient?: Ingredient | null;
   onComplete: () => void;
 }
 
-const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps) => {
-  const { addIngredient, updateIngredient } = useData();
+const IngredientForm = ({ onComplete }: IngredientFormProps) => {
+  const dispatch = useAppDispatch();
+  const existingIngredient = useAppSelector((state: RootState) => state.ui.editingIngredient);
   
-  const [name, setName] = useState("");
-  const [calories, setCalories] = useState("");
-  const [protein, setProtein] = useState("");
-  const [carbs, setCarbs] = useState("");
-  const [fat, setFat] = useState("");
-  const [fiber, setFiber] = useState("");
-  const [nutrients, setNutrients] = useState<Array<{ key: string; value: string; unit: string }>>([]);
+  // Instead of useState, get form state from Redux store
+  const formState = useAppSelector((state: RootState) => state.form?.ingredient || {
+    name: "",
+    calories: "",
+    protein: "",
+    carbs: "",
+    fat: "",
+    fiber: "",
+    nutrients: []
+  });
   
+  // Initialize form when component mounts or existingIngredient changes
   useEffect(() => {
     if (existingIngredient) {
-      setName(existingIngredient.name);
-      setCalories(existingIngredient.calories.toString());
-      setProtein(existingIngredient.protein.toString());
-      setCarbs(existingIngredient.carbs.toString());
-      setFat(existingIngredient.fat.toString());
-      setFiber(existingIngredient.fiber.toString());
-      
-      const nutrientArray = Object.entries(existingIngredient.nutrients).map(([key, nutrient]) => ({
-        key,
-        value: nutrient.value.toString(),
-        unit: nutrient.unit
-      }));
-      
-      setNutrients(nutrientArray);
+      dispatch({ 
+        type: 'form/setIngredientForm', 
+        payload: {
+          name: existingIngredient.name,
+          calories: existingIngredient.calories.toString(),
+          protein: existingIngredient.protein.toString(),
+          carbs: existingIngredient.carbs.toString(),
+          fat: existingIngredient.fat.toString(),
+          fiber: existingIngredient.fiber.toString(),
+          nutrients: Object.entries(existingIngredient.nutrients).map(([key, nutrient]) => ({
+            key,
+            value: nutrient.value.toString(),
+            unit: nutrient.unit
+          }))
+        }
+      });
     } else {
-      resetForm();
+      dispatch({ 
+        type: 'form/setIngredientForm', 
+        payload: {
+          name: "",
+          calories: "",
+          protein: "",
+          carbs: "",
+          fat: "",
+          fiber: "",
+          nutrients: []
+        }
+      });
     }
-  }, [existingIngredient]);
+  }, [existingIngredient, dispatch]);
   
-  const resetForm = () => {
-    setName("");
-    setCalories("");
-    setProtein("");
-    setCarbs("");
-    setFat("");
-    setFiber("");
-    setNutrients([]);
+  const handleInputChange = (field: string, value: string) => {
+    dispatch({
+      type: 'form/updateIngredientField',
+      payload: { field, value }
+    });
   };
   
   const handleAddNutrient = () => {
-    setNutrients([...nutrients, { key: "", value: "", unit: "mg" }]);
+    dispatch({
+      type: 'form/addIngredientNutrient',
+      payload: { key: "", value: "", unit: "mg" }
+    });
   };
   
   const handleRemoveNutrient = (index: number) => {
-    const updatedNutrients = [...nutrients];
-    updatedNutrients.splice(index, 1);
-    setNutrients(updatedNutrients);
+    dispatch({
+      type: 'form/removeIngredientNutrient',
+      payload: index
+    });
   };
   
   const handleNutrientChange = (index: number, field: "key" | "value" | "unit", value: string) => {
-    const updatedNutrients = [...nutrients];
-    updatedNutrients[index] = { ...updatedNutrients[index], [field]: value };
-    setNutrients(updatedNutrients);
+    dispatch({
+      type: 'form/updateIngredientNutrient',
+      payload: { index, field, value }
+    });
   };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !calories) {
+    if (!formState.name || !formState.calories) {
       return;
     }
     
     const nutrientsObject: NutrientMap = {};
-    nutrients.forEach(({ key, value, unit }) => {
+    formState.nutrients.forEach(({ key, value, unit }) => {
       if (key && value) {
         nutrientsObject[key] = {
           value: parseFloat(value),
@@ -93,22 +115,21 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
     
     const ingredientData: Ingredient = {
       id: existingIngredient?.id || uuidv4(),
-      name,
-      calories: parseFloat(calories),
-      protein: parseFloat(protein || "0"),
-      carbs: parseFloat(carbs || "0"),
-      fat: parseFloat(fat || "0"),
-      fiber: parseFloat(fiber || "0"),
+      name: formState.name,
+      calories: parseFloat(formState.calories),
+      protein: parseFloat(formState.protein || "0"),
+      carbs: parseFloat(formState.carbs || "0"),
+      fat: parseFloat(formState.fat || "0"),
+      fiber: parseFloat(formState.fiber || "0"),
       nutrients: nutrientsObject
     };
     
     if (existingIngredient) {
-      updateIngredient(ingredientData);
+      dispatch(updateIngredient(ingredientData));
     } else {
-      addIngredient(ingredientData);
+      dispatch(addIngredient(ingredientData));
     }
     
-    resetForm();
     onComplete();
   };
   
@@ -120,8 +141,8 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
           <Input
             id="name"
             placeholder="e.g., Chicken Breast"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={formState.name}
+            onChange={(e) => handleInputChange("name", e.target.value)}
             required
           />
         </div>
@@ -143,8 +164,8 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
                     id="calories"
                     type="number"
                     placeholder="0"
-                    value={calories}
-                    onChange={(e) => setCalories(e.target.value)}
+                    value={formState.calories}
+                    onChange={(e) => handleInputChange("calories", e.target.value)}
                     step="0.1"
                     min="0"
                     required
@@ -175,8 +196,8 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
                     id="protein"
                     type="number"
                     placeholder="0"
-                    value={protein}
-                    onChange={(e) => setProtein(e.target.value)}
+                    value={formState.protein}
+                    onChange={(e) => handleInputChange("protein", e.target.value)}
                     step="0.1"
                     min="0"
                   />
@@ -191,8 +212,8 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
                     id="carbs"
                     type="number"
                     placeholder="0"
-                    value={carbs}
-                    onChange={(e) => setCarbs(e.target.value)}
+                    value={formState.carbs}
+                    onChange={(e) => handleInputChange("carbs", e.target.value)}
                     step="0.1"
                     min="0"
                   />
@@ -207,8 +228,8 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
                     id="fat"
                     type="number"
                     placeholder="0"
-                    value={fat}
-                    onChange={(e) => setFat(e.target.value)}
+                    value={formState.fat}
+                    onChange={(e) => handleInputChange("fat", e.target.value)}
                     step="0.1"
                     min="0"
                   />
@@ -223,8 +244,8 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
                     id="fiber"
                     type="number"
                     placeholder="0"
-                    value={fiber}
-                    onChange={(e) => setFiber(e.target.value)}
+                    value={formState.fiber}
+                    onChange={(e) => handleInputChange("fiber", e.target.value)}
                     step="0.1"
                     min="0"
                   />
@@ -250,9 +271,9 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
               </Button>
             </div>
             
-            {nutrients.length > 0 ? (
+            {formState.nutrients.length > 0 ? (
               <div className="space-y-2">
-                {nutrients.map((nutrient, index) => (
+                {formState.nutrients.map((nutrient, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <Input
                       placeholder="Name (e.g. Vitamin C)"

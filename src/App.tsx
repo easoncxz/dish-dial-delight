@@ -1,22 +1,21 @@
 
-import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { Toaster } from "@/components/ui/toaster"
-import { DataProvider } from './context/DataContext'
-import Navbar from './components/Navbar'
-import Index from './pages/Index'
-import Ingredients from './pages/Ingredients'
-import EditIngredient from './pages/EditIngredient'
-import Dishes from './pages/Dishes'
-import EditDish from './pages/EditDish'
-import NotFound from './pages/NotFound'
-import { useIsMobile } from './hooks/use-mobile'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { store } from './store';
+import { Toaster } from "@/components/ui/toaster";
+import Navbar from './components/Navbar';
+import Index from './pages/Index';
+import Ingredients from './pages/Ingredients';
+import EditIngredient from './pages/EditIngredient';
+import Dishes from './pages/Dishes';
+import EditDish from './pages/EditDish';
+import NotFound from './pages/NotFound';
+import './App.css';
 
 function App() {
   return (
-    <Router basename={import.meta.env.BASE_URL}>
-      <DataProvider>
+    <Provider store={store}>
+      <Router basename={import.meta.env.BASE_URL}>
         <div className="min-h-screen bg-background text-foreground">
           <Navbar />
           <div className="pt-14 md:pt-0 md:pl-64">
@@ -33,9 +32,9 @@ function App() {
           </div>
           <Toaster />
         </div>
-      </DataProvider>
-    </Router>
-  )
+      </Router>
+    </Provider>
+  );
 }
 
-export default App
+export default App;

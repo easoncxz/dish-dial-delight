@@ -1,21 +1,26 @@
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Edit, Trash2, Salad } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useData } from "@/context/DataContext";
 import { Ingredient } from "@/types";
 import IngredientForm from "./IngredientForm";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { deleteIngredient, selectIngredients } from "@/store/ingredientsSlice";
+import { canDeleteIngredient } from "@/store/thunks";
+import { selectDialogOpen, setDialogOpen } from "@/store/uiSlice";
+import { toast } from "@/components/ui/use-toast";
+import { RootState } from "@/store";
 
 const IngredientList = () => {
-  const { ingredients, deleteIngredient } = useData();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
+  const dispatch = useAppDispatch();
+  const ingredients = useAppSelector(selectIngredients);
+  const dialogOpen = useAppSelector(selectDialogOpen);
+  const searchQuery = useAppSelector((state: RootState) => state.ui.searchQuery || "");
   
   const filteredIngredients = useMemo(() => {
     return ingredients.filter(ingredient => 
@@ -24,13 +29,36 @@ const IngredientList = () => {
   }, [ingredients, searchQuery]);
   
   const handleEdit = (ingredient: Ingredient) => {
-    setEditingIngredient(ingredient);
-    setIsDialogOpen(true);
+    dispatch({ type: 'ui/setEditingIngredient', payload: ingredient });
+    dispatch(setDialogOpen({ key: 'ingredientForm', value: true }));
   };
   
   const handleAddNew = () => {
-    setEditingIngredient(null);
-    setIsDialogOpen(true);
+    dispatch({ type: 'ui/setEditingIngredient', payload: null });
+    dispatch(setDialogOpen({ key: 'ingredientForm', value: true }));
+  };
+  
+  const handleDeleteIngredient = (id: string) => {
+    const canDelete = useAppSelector((state) => canDeleteIngredient(state, id));
+    
+    if (!canDelete) {
+      toast({
+        variant: "destructive",
+        title: "Cannot delete ingredient",
+        description: "This ingredient is used in one or more dishes. Please remove it from these dishes first."
+      });
+      return;
+    }
+    
+    dispatch(deleteIngredient(id));
+  };
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch({ type: 'ui/setSearchQuery', payload: e.target.value });
+  };
+  
+  const handleCloseDialog = () => {
+    dispatch(setDialogOpen({ key: 'ingredientForm', value: false }));
   };
   
   return (
@@ -42,7 +70,7 @@ const IngredientList = () => {
             <Input
               placeholder="Search ingredients..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-9 w-full sm:w-[300px]"
             />
           </div>
@@ -141,7 +169,7 @@ const IngredientList = () => {
                           variant="outline" 
                           size="sm" 
                           className="flex-1 text-destructive hover:text-destructive-foreground hover:bg-destructive"
-                          onClick={() => deleteIngredient(ingredient.id)}
+                          onClick={() => handleDeleteIngredient(ingredient.id)}
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
                           Delete
@@ -177,17 +205,14 @@ const IngredientList = () => {
         </AnimatePresence>
       </div>
       
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={dialogOpen.ingredientForm} onOpenChange={(open) => dispatch(setDialogOpen({ key: 'ingredientForm', value: open }))}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingIngredient ? "Edit Ingredient" : "Add New Ingredient"}
+              {useAppSelector((state: RootState) => state.ui.editingIngredient) ? "Edit Ingredient" : "Add New Ingredient"}
             </DialogTitle>
           </DialogHeader>
-          <IngredientForm 
-            existingIngredient={editingIngredient} 
-            onComplete={() => setIsDialogOpen(false)} 
-          />
+          <IngredientForm onComplete={handleCloseDialog} />
         </DialogContent>
       </Dialog>
     </>

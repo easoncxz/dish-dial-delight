@@ -8,19 +8,19 @@ import {
   Menu, 
   X 
 } from "lucide-react";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { selectMobileMenuOpen, setMobileMenuOpen } from "@/store/uiSlice";
 
 const Navbar = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const isMobile = useIsMobile();
+  const dispatch = useAppDispatch();
+  const isMobileMenuOpen = useAppSelector(selectMobileMenuOpen);
   
   const toggleMobileMenu = (open: boolean) => {
-    setIsMobileMenuOpen(open);
-    // Prevent body scrolling when mobile menu is open
-    document.body.style.overflow = open ? 'hidden' : '';
+    dispatch(setMobileMenuOpen(open));
   };
   
   const routes = [

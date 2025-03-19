@@ -1,28 +1,13 @@
 
-import { useState, useEffect } from "react";
+// A simple hook to determine if we're on mobile
+// Now uses a plain function that checks window width
 
 const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(() => {
-    // Default to desktop during SSR
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < MOBILE_BREAKPOINT;
-  });
-
-  useEffect(() => {
-    // We still need useEffect here for window resize events
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    };
-    
-    window.addEventListener("resize", handleResize);
-    
-    // Set initial value
-    handleResize();
-    
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  return isMobile;
+  // Default to desktop during SSR
+  if (typeof window === 'undefined') return false;
+  
+  // Return true if below breakpoint, false otherwise
+  return window.innerWidth < MOBILE_BREAKPOINT;
 }
