@@ -4,6 +4,7 @@ import { ingredientsReducer } from './ingredientsSlice';
 import { dishesReducer } from './dishesSlice';
 import { uiReducer } from './uiSlice';
 import { formReducer } from './formSlice';
+import { toastReducer } from './toastSlice';
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
     dishes: dishesReducer,
     ui: uiReducer,
     form: formReducer,
+    toast: toastReducer,
   },
 });
 
