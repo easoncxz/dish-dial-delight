@@ -6,9 +6,11 @@ import DishList from "@/components/DishList";
 import ImportExport from "@/components/ImportExport";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dishes = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   return (
     <div className="min-h-screen pb-16">
@@ -16,8 +18,8 @@ const Dishes = () => {
         title="Dishes" 
         description="Create and manage your favorite dishes" 
       />
-      <main className="container max-w-6xl">
-        <div className="flex justify-between items-center mb-6">
+      <main className={isMobile ? "px-3" : "container max-w-6xl"}>
+        <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'} mb-4 md:mb-6`}>
           <Button 
             onClick={() => navigate("/dishes/new")}
             className="flex items-center gap-2"

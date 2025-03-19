@@ -6,9 +6,11 @@ import IngredientList from "@/components/IngredientList";
 import ImportExport from "@/components/ImportExport";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Ingredients = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   return (
     <div className="min-h-screen pb-16">
@@ -16,8 +18,8 @@ const Ingredients = () => {
         title="Ingredients" 
         description="Manage your ingredient nutritional details" 
       />
-      <main className="container max-w-6xl">
-        <div className="flex justify-between items-center mb-6">
+      <main className={isMobile ? "px-3" : "container max-w-6xl"}>
+        <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'} mb-4 md:mb-6`}>
           <Button 
             onClick={() => navigate("/ingredients/new")}
             className="flex items-center gap-2"

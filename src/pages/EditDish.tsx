@@ -7,11 +7,13 @@ import DishForm from "@/components/DishForm";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const EditDish = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { dishes, calculateDishNutrition } = useData();
+  const isMobile = useIsMobile();
   
   const dish = id ? dishes.find(d => d.id === id) : undefined;
   const isNewDish = !id || !dish;
@@ -43,19 +45,19 @@ const EditDish = () => {
           : `Edit ${dish?.name}`} 
       />
       
-      <main className="container max-w-4xl">
-        <div className="mb-6">
+      <main className={isMobile ? "px-3" : "container max-w-4xl"}>
+        <div className="mb-4 md:mb-6">
           <Button 
             variant="ghost" 
             className="flex items-center gap-2" 
             onClick={() => navigate('/dishes')}
           >
             <ArrowLeft size={16} />
-            Back to Dishes
+            <span className="md:inline">Back to Dishes</span>
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div>
             <DishForm 
               existingDish={dish} 
@@ -64,36 +66,38 @@ const EditDish = () => {
           </div>
           
           {!isNewDish && dish && (
-            <div className="bg-card p-6 rounded-lg shadow-sm">
-              <h3 className="text-lg font-medium mb-4">Calories from Macronutrients</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={macroCaloriesData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {macroCaloriesData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value) => {
-                      if (typeof value === 'number') {
-                        return [`${value.toFixed(1)} kcal`, 'Calories'];
-                      }
-                      return [value, 'Calories'];
-                    }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="text-sm text-muted-foreground mt-4">
+            <div className="bg-card p-4 md:p-6 rounded-lg shadow-sm">
+              <h3 className="text-lg font-medium mb-3 md:mb-4">Calories from Macronutrients</h3>
+              <div className="h-[250px] md:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={macroCaloriesData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={isMobile ? 70 : 80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {macroCaloriesData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value) => {
+                        if (typeof value === 'number') {
+                          return [`${value.toFixed(1)} kcal`, 'Calories'];
+                        }
+                        return [value, 'Calories'];
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="text-sm text-muted-foreground mt-3 md:mt-4">
                 <p>This chart shows the distribution of calories from different macronutrients in this dish.</p>
                 <ul className="list-disc list-inside mt-2">
                   <li>Protein: 4 calories per gram</li>

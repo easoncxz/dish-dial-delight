@@ -10,6 +10,7 @@ import EditIngredient from './pages/EditIngredient'
 import Dishes from './pages/Dishes'
 import EditDish from './pages/EditDish'
 import NotFound from './pages/NotFound'
+import { useIsMobile } from './hooks/use-mobile'
 import './App.css'
 
 function App() {
@@ -18,7 +19,7 @@ function App() {
       <DataProvider>
         <div className="min-h-screen bg-background text-foreground">
           <Navbar />
-          <div className="pt-16">
+          <div className="pt-14 md:pt-0 md:pl-64">
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/ingredients" element={<Ingredients />} />

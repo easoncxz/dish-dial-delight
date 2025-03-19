@@ -81,11 +81,15 @@
     @apply border-border;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    box-sizing: border-box;
   }
 
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    overflow-x: hidden;
+    position: relative;
+    width: 100%;
   }
 
   /* Custom scrollbar */
@@ -104,6 +108,13 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/30;
+  }
+
+  /* Fix for dialog content on mobile */
+  @media (max-width: 640px) {
+    body.dialog-open {
+      overflow: hidden;
+    }
   }
 }
 
@@ -127,6 +138,21 @@
   .input-range::-moz-range-thumb {
     @apply w-4 h-4 rounded-full bg-primary border-2 border-white shadow-md cursor-pointer transition-all;
   }
+  
+  /* Responsive container class */
+  .mobile-container {
+    @apply w-full px-4 md:px-6;
+  }
+  
+  /* Mobile-optimized form controls */
+  .mobile-form-control {
+    @apply mb-2 md:mb-4;
+  }
+  
+  /* Mobile-optimized card */
+  .mobile-card {
+    @apply p-3 md:p-5;
+  }
 }
 
 /* Animations */
@@ -142,5 +168,24 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 640px) {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  
+  .dialog-responsive {
+    margin: 0.5rem;
+    max-height: calc(100vh - 7rem);
+    overflow-y: auto;
   }
 }
