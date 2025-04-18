@@ -45,7 +45,7 @@ jobs:
           BASE_URL: /dish-dial-delight/
 
       - name: Build
-        run: npm install && npm run build
+        run: npm install && BASE_URL="$BASE_URL" npm run build
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@4.1.5
