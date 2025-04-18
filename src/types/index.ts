@@ -44,13 +44,14 @@ export interface NutritionSummary {
 export type DataContextType = {
   ingredients: Ingredient[];
   dishes: Dish[];
+  isLoading: boolean;
   addIngredient: (ingredient: Ingredient) => void;
   updateIngredient: (ingredient: Ingredient) => void;
   deleteIngredient: (id: string) => void;
   addDish: (dish: Dish) => void;
   updateDish: (dish: Dish) => void;
   deleteDish: (id: string) => void;
-  exportData: () => string;
-  importData: (jsonData: string) => void;
+  exportData: () => Promise<string>;
+  importData: (jsonData: string) => Promise<void>;
   calculateDishNutrition: (dish: Dish) => NutritionSummary;
 };

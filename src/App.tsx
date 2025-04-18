@@ -1,40 +1,40 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { DataProvider } from "@/context/DataContext";
-import Index from "./pages/Index";
-import Ingredients from "./pages/Ingredients";
-import Dishes from "./pages/Dishes";
-import NotFound from "./pages/NotFound";
-import Navbar from "./components/Navbar";
+import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Toaster } from "@/components/ui/toaster"
+import { DataProvider } from './context/DataContext'
+import Navbar from './components/Navbar'
+import Index from './pages/Index'
+import Ingredients from './pages/Ingredients'
+import EditIngredient from './pages/EditIngredient'
+import Dishes from './pages/Dishes'
+import EditDish from './pages/EditDish'
+import NotFound from './pages/NotFound'
+import './App.css'
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <DataProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="flex min-h-screen">
-            <Navbar />
-            <div className="flex-1 md:ml-64 pt-14 md:pt-0">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/ingredients" element={<Ingredients />} />
-                <Route path="/dishes" element={<Dishes />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
+function App() {
+  return (
+    <Router basename={import.meta.env.BASE_URL}>
+      <DataProvider>
+        <div className="min-h-screen bg-background text-foreground">
+          <Navbar />
+          <div className="pt-16">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/ingredients" element={<Ingredients />} />
+              <Route path="/ingredients/new" element={<EditIngredient />} />
+              <Route path="/ingredients/edit/:id" element={<EditIngredient />} />
+              <Route path="/dishes" element={<Dishes />} />
+              <Route path="/dishes/new" element={<EditDish />} />
+              <Route path="/dishes/edit/:id" element={<EditDish />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </div>
-        </BrowserRouter>
-      </TooltipProvider>
-    </DataProvider>
-  </QueryClientProvider>
-);
+          <Toaster />
+        </div>
+      </DataProvider>
+    </Router>
+  )
+}
 
-export default App;
+export default App

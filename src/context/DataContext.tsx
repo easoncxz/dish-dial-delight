@@ -14,7 +14,7 @@ import {
   storeDishes,
   exportAllData,
   importAllData
-} from '@/utils/storage';
+} from '@/utils/indexedDB';
 import { calculateDishNutrition } from '@/utils/calculations';
 import { toast } from '@/components/ui/use-toast';
 
@@ -25,30 +25,73 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Load data from localStorage on initial mount
+  // Load data from IndexedDB on initial mount
   useEffect(() => {
-    const storedIngredients = getStoredIngredients();
-    const storedDishes = getStoredDishes();
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const storedIngredients = await getStoredIngredients();
+        const storedDishes = await getStoredDishes();
+        
+        setIngredients(storedIngredients);
+        setDishes(storedDishes);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast({
+          variant: "destructive",
+          title: "Error loading data",
+          description: "There was a problem loading your data."
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    setIngredients(storedIngredients);
-    setDishes(storedDishes);
+    loadData();
   }, []);
   
-  // Save ingredients to localStorage when changed
+  // Save ingredients to IndexedDB when changed
   useEffect(() => {
-    if (ingredients.length > 0) {
-      storeIngredients(ingredients);
-    }
-  }, [ingredients]);
+    const saveIngredients = async () => {
+      if (ingredients.length > 0 && !isLoading) {
+        try {
+          await storeIngredients(ingredients);
+        } catch (error) {
+          console.error('Error saving ingredients:', error);
+          toast({
+            variant: "destructive",
+            title: "Error saving ingredients",
+            description: "There was a problem saving your ingredient data."
+          });
+        }
+      }
+    };
+    
+    saveIngredients();
+  }, [ingredients, isLoading]);
   
-  // Save dishes to localStorage when changed
+  // Save dishes to IndexedDB when changed
   useEffect(() => {
-    if (dishes.length > 0) {
-      storeDishes(dishes);
-    }
-  }, [dishes]);
-  
+    const saveDishes = async () => {
+      if (dishes.length > 0 && !isLoading) {
+        try {
+          await storeDishes(dishes);
+        } catch (error) {
+          console.error('Error saving dishes:', error);
+          toast({
+            variant: "destructive",
+            title: "Error saving dishes",
+            description: "There was a problem saving your dish data."
+          });
+        }
+      }
+    };
+    
+    saveDishes();
+  }, [dishes, isLoading]);
+
   // Ingredient CRUD operations
   const addIngredient = (ingredient: Ingredient) => {
     const newIngredient = {
@@ -138,9 +181,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Export and import functions
-  const exportData = () => {
+  const exportData = async () => {
     try {
-      const jsonData = exportAllData();
+      const jsonData = await exportAllData();
       return jsonData;
     } catch (error) {
       console.error('Error exporting data:', error);
@@ -153,9 +196,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  const importData = (jsonData: string) => {
+  const importData = async (jsonData: string) => {
     try {
-      const { ingredients: newIngredients, dishes: newDishes } = importAllData(jsonData);
+      const { ingredients: newIngredients, dishes: newDishes } = await importAllData(jsonData);
       setIngredients(newIngredients);
       setDishes(newDishes);
       toast({
@@ -193,7 +236,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     deleteDish,
     exportData,
     importData,
-    calculateDishNutrition: calculateNutrition
+    calculateDishNutrition: calculateNutrition,
+    isLoading
   };
   
   return (
