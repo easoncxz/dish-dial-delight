@@ -49,6 +49,6 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           branch: gh-pages
-          folder: dist
+          folder: docs
           clean: true
           token: ${{ secrets.PERSONAL_TOKEN }}

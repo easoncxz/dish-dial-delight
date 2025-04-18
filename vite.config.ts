@@ -16,7 +16,7 @@ export default defineConfig({
   },
   base: process.env.BASE_URL || '/',
   build: {
-    outDir: path.join(__dirname, "dist"), // match Github Pages defaults
+    outDir: path.join(__dirname, "docs"), // match Github Pages defaults
     emptyOutDir: true, // https://stackoverflow.com/questions/66863200/changing-the-input-and-output-directory-in-vite
   },
 })
