@@ -13,7 +13,8 @@ dist-ssr
 
 # We're putting build output in the `docs/` directory to serve on Github Pages
 !dist
-dist/
+!dist/something
+dist/*
 
 # Editor directories and files
 .vscode/*
