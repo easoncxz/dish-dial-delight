@@ -30,13 +30,7 @@
             nodePackages.prettier
 
             # Tailwind CSS support
-            nodePackages.tailwindcss
-
-            # Vite for development
-            nodePackages.vite
-
-            # React developer tools
-            nodePackages.react-devtools
+            #nodePackages.tailwindcss # to be installed via npm
 
             # Other useful tools
             git
