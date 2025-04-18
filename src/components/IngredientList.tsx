@@ -186,7 +186,7 @@ const IngredientList = () => {
           </DialogHeader>
           <IngredientForm 
             existingIngredient={editingIngredient} 
-            onSaved={() => setIsDialogOpen(false)} 
+            onComplete={() => setIsDialogOpen(false)} 
           />
         </DialogContent>
       </Dialog>

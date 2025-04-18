@@ -83,7 +83,12 @@ const EditDish = () => {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: number) => [`${value.toFixed(1)} kcal`, 'Calories']} 
+                    formatter={(value) => {
+                      if (typeof value === 'number') {
+                        return [`${value.toFixed(1)} kcal`, 'Calories'];
+                      }
+                      return [value, 'Calories'];
+                    }}
                   />
                   <Legend />
                 </PieChart>

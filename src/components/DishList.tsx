@@ -177,7 +177,7 @@ const DishList = () => {
           </DialogHeader>
           <DishForm 
             existingDish={editingDish} 
-            onSaved={() => setIsDialogOpen(false)} 
+            onComplete={() => setIsDialogOpen(false)} 
           />
         </DialogContent>
       </Dialog>
