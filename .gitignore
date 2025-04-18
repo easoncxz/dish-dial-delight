@@ -12,6 +12,7 @@ dist-ssr
 *.local
 
 # We're putting build output in the `docs/` directory to serve on Github Pages
+!dist
 dist/
 
 # Editor directories and files
