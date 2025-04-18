@@ -13,16 +13,26 @@ const ImportExport = () => {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importText, setImportText] = useState("");
+  const [exportedData, setExportedData] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const handleExport = () => {
-    const json = exportData();
-    setShowExportDialog(true);
+  const handleExport = async () => {
+    try {
+      const json = await exportData();
+      setExportedData(json);
+      setShowExportDialog(true);
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: "There was an error exporting your data."
+      });
+    }
   };
   
   const handleDownload = () => {
-    const json = exportData();
-    const blob = new Blob([json], { type: "application/json" });
+    const blob = new Blob([exportedData], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -66,11 +76,15 @@ const ImportExport = () => {
     }
   };
   
-  const confirmImport = () => {
+  const confirmImport = async () => {
     try {
-      importData(importText);
+      await importData(importText);
       setShowImportDialog(false);
       setImportText("");
+      toast({
+        title: "Import successful",
+        description: "Your data has been imported successfully."
+      });
     } catch (error) {
       console.error("Error importing data:", error);
       toast({
@@ -90,7 +104,7 @@ const ImportExport = () => {
         </DialogHeader>
         <div className="py-4">
           <Textarea
-            value={exportData()}
+            value={exportedData}
             readOnly
             className="min-h-[200px] font-mono text-sm"
           />

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useData } from "@/context/DataContext";
 import { v4 as uuidv4 } from "uuid";
@@ -17,10 +16,10 @@ import { Dish, DishIngredient } from "@/types";
 
 interface DishFormProps {
   existingDish?: Dish | null;
-  onSaved: () => void;
+  onComplete: () => void;
 }
 
-const DishForm = ({ existingDish, onSaved }: DishFormProps) => {
+const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
   const { ingredients, addDish, updateDish, calculateDishNutrition } = useData();
   
   const [name, setName] = useState("");
@@ -58,7 +57,6 @@ const DishForm = ({ existingDish, onSaved }: DishFormProps) => {
   const handleAddIngredient = () => {
     if (!selectedIngredientId) return;
     
-    // Check if ingredient is already added
     const exists = dishIngredients.some(item => item.ingredientId === selectedIngredientId);
     
     if (!exists) {
@@ -93,7 +91,6 @@ const DishForm = ({ existingDish, onSaved }: DishFormProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form
     if (!name || dishIngredients.length === 0) {
       return;
     }
@@ -112,7 +109,7 @@ const DishForm = ({ existingDish, onSaved }: DishFormProps) => {
     }
     
     resetForm();
-    onSaved();
+    onComplete();
   };
   
   return (
@@ -245,7 +242,7 @@ const DishForm = ({ existingDish, onSaved }: DishFormProps) => {
       )}
       
       <div className="flex justify-end space-x-3 pt-4">
-        <Button type="button" variant="outline" onClick={onSaved}>
+        <Button type="button" variant="outline" onClick={onComplete}>
           Cancel
         </Button>
         <Button 

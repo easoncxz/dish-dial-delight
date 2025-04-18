@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useData } from "@/context/DataContext";
 import { v4 as uuidv4 } from "uuid";
@@ -14,10 +13,10 @@ import { Ingredient, NutrientMap } from "@/types";
 
 interface IngredientFormProps {
   existingIngredient?: Ingredient | null;
-  onSaved: () => void;
+  onComplete: () => void;
 }
 
-const IngredientForm = ({ existingIngredient, onSaved }: IngredientFormProps) => {
+const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps) => {
   const { addIngredient, updateIngredient } = useData();
   
   const [name, setName] = useState("");
@@ -37,7 +36,6 @@ const IngredientForm = ({ existingIngredient, onSaved }: IngredientFormProps) =>
       setFat(existingIngredient.fat.toString());
       setFiber(existingIngredient.fiber.toString());
       
-      // Convert nutrients object to array
       const nutrientArray = Object.entries(existingIngredient.nutrients).map(([key, nutrient]) => ({
         key,
         value: nutrient.value.toString(),
@@ -79,12 +77,10 @@ const IngredientForm = ({ existingIngredient, onSaved }: IngredientFormProps) =>
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form
     if (!name || !calories) {
       return;
     }
     
-    // Convert nutrients array to object
     const nutrientsObject: NutrientMap = {};
     nutrients.forEach(({ key, value, unit }) => {
       if (key && value) {
@@ -113,7 +109,7 @@ const IngredientForm = ({ existingIngredient, onSaved }: IngredientFormProps) =>
     }
     
     resetForm();
-    onSaved();
+    onComplete();
   };
   
   return (
@@ -314,7 +310,7 @@ const IngredientForm = ({ existingIngredient, onSaved }: IngredientFormProps) =>
       </Tabs>
       
       <div className="flex justify-end space-x-3 pt-4">
-        <Button type="button" variant="outline" onClick={onSaved}>
+        <Button type="button" variant="outline" onClick={onComplete}>
           Cancel
         </Button>
         <Button type="submit">{existingIngredient ? "Update" : "Add"} Ingredient</Button>

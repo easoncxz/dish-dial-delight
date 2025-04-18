@@ -82,7 +82,14 @@ const EditDish = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [`${value.toFixed(1)} kcal`, 'Calories']} />
+                  <Tooltip 
+                    formatter={(value) => {
+                      if (typeof value === 'number') {
+                        return [`${value.toFixed(1)} kcal`, 'Calories'];
+                      }
+                      return [value, 'Calories'];
+                    }}
+                  />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>

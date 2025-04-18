@@ -81,7 +81,9 @@ const EditIngredient = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [`${value.toFixed(1)} kcal`, 'Calories']} />
+                  <Tooltip 
+                    formatter={(value: number) => [`${value.toFixed(1)} kcal`, 'Calories']} 
+                  />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
