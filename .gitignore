@@ -8,10 +8,11 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-!dist
-dist/*
 dist-ssr
 *.local
+
+# We're putting build output in the `docs/` directory to serve on Github Pages
+docs/
 
 # Editor directories and files
 .vscode/*
