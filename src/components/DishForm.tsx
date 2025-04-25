@@ -26,6 +26,7 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
   const [description, setDescription] = useState("");
   const [dishIngredients, setDishIngredients] = useState<DishIngredient[]>([]);
   const [selectedIngredientId, setSelectedIngredientId] = useState("");
+  const [tempQuantities, setTempQuantities] = useState<Record<number, string>>({});
   
   const nutrition = useMemo(() => {
     const dishData: Dish = {
@@ -81,6 +82,40 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
       quantity: value[0]
     };
     setDishIngredients(updatedIngredients);
+  };
+  
+  const handleQuantityInputFocus = (index: number, quantity: number) => {
+    setTempQuantities(prev => ({
+      ...prev,
+      [index]: quantity.toString()
+    }));
+  };
+
+  const handleQuantityInputBlur = (index: number) => {
+    const value = parseInt(tempQuantities[index] || '0');
+    if (!isNaN(value) && value >= 0) {
+      // Update the actual ingredient quantity in dishIngredients
+      const updatedIngredients = [...dishIngredients];
+      updatedIngredients[index] = {
+        ...updatedIngredients[index],
+        quantity: value
+      };
+      setDishIngredients(updatedIngredients);
+    }
+    
+    // Clear the temporary quantity for this index
+    setTempQuantities(prev => {
+      const updated = { ...prev };
+      delete updated[index];
+      return updated;
+    });
+  };
+
+  const handleQuantityInputChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    setTempQuantities(prev => ({
+      ...prev,
+      [index]: e.target.value
+    }));
   };
   
   const getIngredientName = (id: string) => {
@@ -205,13 +240,13 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
                       <div className="flex items-center">
                         <Input
                           type="number"
-                          value={item.quantity}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value);
-                            if (!isNaN(value) && value >= 1 && value <= 500) {
-                              handleQuantityChange(index, [value]);
-                            }
+                          value={tempQuantities[index] || item.quantity}
+                          onFocus={(e) => {
+                            handleQuantityInputFocus(index, item.quantity);
+                            e.target.select(); // Select all text when focused
                           }}
+                          onBlur={() => handleQuantityInputBlur(index)}
+                          onChange={(e) => handleQuantityInputChange(index, e)}
                           className="w-[80px]"
                           min={1}
                           max={500}
