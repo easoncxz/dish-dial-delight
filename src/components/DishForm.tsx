@@ -28,6 +28,13 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
   const [selectedIngredientId, setSelectedIngredientId] = useState("");
   const [tempQuantities, setTempQuantities] = useState<Record<number, string>>({});
   
+  // Filter and sort available ingredients alphabetically
+  const availableIngredients = useMemo(() => {
+    return ingredients
+      .filter(ing => !dishIngredients.some(item => item.ingredientId === ing.id))
+      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  }, [ingredients, dishIngredients]);
+  
   const nutrition = useMemo(() => {
     const dishData: Dish = {
       id: existingDish?.id || "temp",
@@ -186,19 +193,22 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <Label htmlFor="ingredient-select">Add Ingredient</Label>
-            <Select value={selectedIngredientId} onValueChange={setSelectedIngredientId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select an ingredient" />
+            <Select 
+              value={selectedIngredientId} 
+              onValueChange={(value) => {
+                setSelectedIngredientId(value);
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select ingredient" />
               </SelectTrigger>
               <SelectContent>
-                {ingredients.length > 0 ? (
-                  ingredients
-                    .filter(ing => !dishIngredients.some(item => item.ingredientId === ing.id))
-                    .map(ingredient => (
-                      <SelectItem key={ingredient.id} value={ingredient.id}>
-                        {ingredient.name}
-                      </SelectItem>
-                    ))
+                {availableIngredients.length > 0 ? (
+                  availableIngredients.map(ingredient => (
+                    <SelectItem key={ingredient.id} value={ingredient.id}>
+                      {ingredient.name}
+                    </SelectItem>
+                  ))
                 ) : (
                   <SelectItem value="none" disabled>
                     No ingredients available
