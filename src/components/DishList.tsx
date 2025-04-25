@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Edit, Trash2, Utensils } from "lucide-react";
@@ -110,8 +109,8 @@ const DishList = () => {
                               <p className="font-medium">{Math.round(nutrition.protein * 10) / 10}g</p>
                             </div>
                             <div>
-                              <p className="text-xs text-muted-foreground">Carbs</p>
-                              <p className="font-medium">{Math.round(nutrition.carbs * 10) / 10}g</p>
+                              <p className="text-xs text-muted-foreground">Fiber</p>
+                              <p className="font-medium">{Math.round(nutrition.fiber * 10) / 10}g</p>
                             </div>
                           </div>
                         </div>
