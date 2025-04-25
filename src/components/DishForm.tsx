@@ -118,6 +118,15 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
     }));
   };
   
+  // Handle key press in quantity input fields
+  const handleQuantityKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // If Enter key is pressed, prevent form submission and blur the input
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.currentTarget.blur();
+    }
+  };
+  
   const getIngredientName = (id: string) => {
     const ingredient = ingredients.find(ing => ing.id === id);
     return ingredient ? ingredient.name : "Unknown Ingredient";
@@ -247,6 +256,7 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
                           }}
                           onBlur={() => handleQuantityInputBlur(index)}
                           onChange={(e) => handleQuantityInputChange(index, e)}
+                          onKeyDown={handleQuantityKeyPress} // Handle Enter key press
                           className="w-[80px]"
                           min={1}
                           max={500}
