@@ -1,4 +1,3 @@
-
 import { Dish, Ingredient, NutritionSummary, NutrientMap } from '@/types';
 
 // Calculate the nutrition for a specific amount of an ingredient
@@ -82,8 +81,8 @@ export const calculateMacroPercentages = (
   // Prevent division by zero
   if (totalCalories === 0) {
     return [
-      { label: 'Protein', value: 0, color: '#3b82f6' },
-      { label: 'Carbs', value: 0, color: '#ef4444' },
+      { label: 'Protein', value: 0, color: '#ef4444' },
+      { label: 'Carbs', value: 0, color: '#22c55e' },
       { label: 'Fat', value: 0, color: '#eab308' }
     ];
   }
@@ -92,12 +91,12 @@ export const calculateMacroPercentages = (
     {
       label: 'Protein',
       value: Math.round((proteinCalories / totalCalories) * 100),
-      color: '#3b82f6'
+      color: '#ef4444'
     },
     {
       label: 'Carbs',
       value: Math.round((carbCalories / totalCalories) * 100),
-      color: '#ef4444'
+      color: '#22c55e'
     },
     {
       label: 'Fat',

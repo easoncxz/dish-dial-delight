@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -25,9 +24,9 @@ const EditIngredient = () => {
     const fatCalories = ingredient.fat * 9;
     
     return [
-      { name: 'Protein', value: proteinCalories, color: '#10B981' },
-      { name: 'Carbs', value: carbsCalories, color: '#3B82F6' },
-      { name: 'Fat', value: fatCalories, color: '#F97316' }
+      { name: 'Protein', value: proteinCalories, color: '#ef4444' },
+      { name: 'Carbs', value: carbsCalories, color: '#22c55e' },
+      { name: 'Fat', value: fatCalories, color: '#eab308' }
     ];
   };
   

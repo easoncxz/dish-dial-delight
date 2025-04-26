@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Edit, Trash2, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,55 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useData } from "@/context/DataContext";
-import { Dish } from "@/types";
+import { Dish, NutritionSummary } from "@/types";
 import DishForm from "./DishForm";
+import { calculateMacroPercentages } from "@/utils/calculations";
+
+// Small MacroNutrient Pie Chart Component
+const MacroNutrientPieChart = ({ nutrition }: { nutrition: NutritionSummary }) => {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const macros = calculateMacroPercentages(nutrition);
+  
+  // Render the pie chart using divs
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const chart = chartRef.current;
+    
+    // Clear previous chart
+    chart.innerHTML = "";
+    
+    let cumulativeAngle = 0;
+    
+    macros.forEach((macro) => {
+      if (macro.value <= 0) return;
+      
+      const segment = document.createElement("div");
+      segment.className = "absolute inset-0";
+      
+      // Calculate segment styles
+      const startAngle = cumulativeAngle;
+      const angleSize = (macro.value / 100) * 360;
+      cumulativeAngle += angleSize;
+      
+      // Set the clip path for the segment
+      segment.style.backgroundColor = macro.color;
+      segment.style.clipPath = `path('M ${10} ${10} L ${10 + 10 * Math.cos((startAngle * Math.PI) / 180)} ${
+        10 + 10 * Math.sin((startAngle * Math.PI) / 180)
+      } A 10 10 0 ${angleSize > 180 ? 1 : 0} 1 ${10 + 10 * Math.cos(((startAngle + angleSize) * Math.PI) / 180)} ${
+        10 + 10 * Math.sin(((startAngle + angleSize) * Math.PI) / 180)
+      } Z')`;
+      
+      chart.appendChild(segment);
+    });
+  }, [macros]);
+
+  return (
+    <div className="relative w-[20px] h-[20px] rounded-full">
+      <div ref={chartRef} className="absolute inset-0 rounded-full overflow-hidden" />
+      <div className="absolute inset-0 rounded-full border border-muted-foreground/10" />
+    </div>
+  );
+};
 
 const DishList = () => {
   const { dishes, ingredients, deleteDish, calculateDishNutrition } = useData();
@@ -79,7 +126,9 @@ const DishList = () => {
                     <Card>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg flex items-center">
-                          <Utensils className="h-5 w-5 mr-2 text-primary" />
+                          <div className="h-5 w-5 mr-2 text-primary flex items-center justify-center">
+                            <MacroNutrientPieChart nutrition={nutrition} />
+                          </div>
                           {dish.name}
                         </CardTitle>
                       </CardHeader>
