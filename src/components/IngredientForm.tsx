@@ -113,8 +113,8 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
   };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid gap-4">
+    <form onSubmit={handleSubmit} className="space-y-4 px-1 sm:px-4">
+      <div className="grid gap-3">
         <div className="grid gap-2">
           <Label htmlFor="name">Ingredient Name</Label>
           <Input
@@ -133,8 +133,8 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
           <TabsTrigger value="micro">Micronutrients</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="macros" className="space-y-4 py-4">
-          <div className="grid gap-4">
+        <TabsContent value="macros" className="space-y-3 py-3">
+          <div className="grid gap-3">
             <div className="flex items-center">
               <div className="flex-1">
                 <Label htmlFor="calories">Calories</Label>
@@ -152,7 +152,7 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
                   <span className="ml-2 text-sm text-muted-foreground">kcal</span>
                 </div>
               </div>
-              <div className="w-8"></div> {/* Spacer */}
+              <div className="w-4"></div> {/* Smaller spacer */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -167,7 +167,7 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
               </TooltipProvider>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="protein">Protein</Label>
                 <div className="flex items-center mt-1.5">
@@ -235,8 +235,8 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
           </div>
         </TabsContent>
         
-        <TabsContent value="micro" className="py-4">
-          <div className="space-y-4">
+        <TabsContent value="micro" className="py-3">
+          <div className="space-y-3">
             <div className="flex justify-between items-center">
               <Label>Micronutrients</Label>
               <Button
@@ -253,47 +253,49 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
             {nutrients.length > 0 ? (
               <div className="space-y-2">
                 {nutrients.map((nutrient, index) => (
-                  <div key={index} className="flex items-center gap-2">
+                  <div key={index} className="flex flex-wrap items-center gap-2">
                     <Input
                       placeholder="Name (e.g. Vitamin C)"
                       value={nutrient.key}
                       onChange={(e) => handleNutrientChange(index, "key", e.target.value)}
                       className="flex-1"
                     />
-                    <Input
-                      type="number"
-                      placeholder="Value"
-                      value={nutrient.value}
-                      onChange={(e) => handleNutrientChange(index, "value", e.target.value)}
-                      step="0.01"
-                      min="0"
-                      className="w-[100px]"
-                    />
-                    <select
-                      value={nutrient.unit}
-                      onChange={(e) => handleNutrientChange(index, "unit", e.target.value)}
-                      className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none"
-                    >
-                      <option value="mg">mg</option>
-                      <option value="g">g</option>
-                      <option value="µg">µg</option>
-                      <option value="IU">IU</option>
-                      <option value="%">%</option>
-                    </select>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveNutrient(index)}
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center">
+                      <Input
+                        type="number"
+                        placeholder="Value"
+                        value={nutrient.value}
+                        onChange={(e) => handleNutrientChange(index, "value", e.target.value)}
+                        step="0.01"
+                        min="0"
+                        className="w-[70px] sm:w-[100px]"
+                      />
+                      <select
+                        value={nutrient.unit}
+                        onChange={(e) => handleNutrientChange(index, "unit", e.target.value)}
+                        className="h-9 rounded-md border border-input bg-background px-2 sm:px-3 py-1 text-sm ml-1 focus:outline-none"
+                      >
+                        <option value="mg">mg</option>
+                        <option value="g">g</option>
+                        <option value="µg">µg</option>
+                        <option value="IU">IU</option>
+                        <option value="%">%</option>
+                      </select>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveNutrient(index)}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive ml-1"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="border border-dashed rounded p-6 text-center">
+              <div className="border border-dashed rounded p-3 sm:p-6 text-center">
                 <p className="text-muted-foreground mb-2">No micronutrients added yet</p>
                 <Button
                   type="button"
@@ -309,7 +311,7 @@ const IngredientForm = ({ existingIngredient, onComplete }: IngredientFormProps)
         </TabsContent>
       </Tabs>
       
-      <div className="flex justify-end space-x-3 pt-4">
+      <div className="flex justify-end space-x-3 pt-3">
         <Button type="button" variant="outline" onClick={onComplete}>
           Cancel
         </Button>

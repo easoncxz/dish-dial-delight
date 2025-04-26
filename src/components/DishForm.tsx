@@ -164,8 +164,8 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
   };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid gap-4">
+    <form onSubmit={handleSubmit} className="space-y-4 px-1 sm:px-4">
+      <div className="grid gap-3">
         <div className="grid gap-2">
           <Label htmlFor="name">Dish Name</Label>
           <Input
@@ -189,7 +189,7 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
         </div>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <Label htmlFor="ingredient-select">Add Ingredient</Label>
@@ -232,9 +232,9 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
             <div className="space-y-3">
               {dishIngredients.map((item, index) => (
                 <Card key={index}>
-                  <CardContent className="p-4">
+                  <CardContent className="p-2 sm:p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium">{getIngredientName(item.ingredientId)}</div>
+                      <div className="font-medium text-sm sm:text-base truncate max-w-[180px] sm:max-w-full">{getIngredientName(item.ingredientId)}</div>
                       <Button
                         type="button"
                         variant="ghost"
@@ -245,7 +245,7 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
                         <XCircle className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="grid grid-cols-[1fr_auto] gap-4 items-center">
+                    <div className="grid grid-cols-[1fr_auto] gap-2 sm:gap-4 items-center">
                       <div className="w-full">
                         <Slider
                           value={[item.quantity]}
@@ -267,7 +267,7 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
                           onBlur={() => handleQuantityInputBlur(index)}
                           onChange={(e) => handleQuantityInputChange(index, e)}
                           onKeyDown={handleQuantityKeyPress} // Handle Enter key press
-                          className="w-[80px]"
+                          className="w-[70px] sm:w-[80px]"
                           min={1}
                           max={500}
                         />
@@ -279,7 +279,7 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
               ))}
             </div>
           ) : (
-            <div className="border border-dashed rounded p-6 text-center">
+            <div className="border border-dashed rounded p-3 sm:p-6 text-center">
               <p className="text-muted-foreground mb-2">No ingredients added yet</p>
               <p className="text-sm text-muted-foreground mb-3">
                 Select ingredients above to add them to your dish
@@ -296,7 +296,7 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
         </div>
       )}
       
-      <div className="flex justify-end space-x-3 pt-4">
+      <div className="flex justify-end space-x-3 pt-2">
         <Button type="button" variant="outline" onClick={onComplete}>
           Cancel
         </Button>

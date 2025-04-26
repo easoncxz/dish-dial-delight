@@ -188,10 +188,10 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4 px-1 sm:px-6">
       {/* Basic Meal Info */}
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="name">Meal Name</Label>
             <Input
@@ -213,7 +213,7 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                 onChange={(e) => setServings(parseInt(e.target.value) || 1)}
                 required
               />
-              <Badge className="ml-2 whitespace-nowrap">
+              <Badge className="ml-1 whitespace-nowrap">
                 {servings} {servings === 1 ? "person" : "people"}
               </Badge>
             </div>
@@ -226,13 +226,13 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
             placeholder="Describe this meal..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="resize-none min-h-[100px]"
+            className="resize-none min-h-[80px]"
           />
         </div>
       </div>
 
       {/* Dish Selection */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-medium">Dishes</h3>
           <Button type="button" onClick={handleAddDish} size="sm">
@@ -241,8 +241,8 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
         </div>
 
         {mealDishes.length === 0 ? (
-          <div className="text-center py-8 border border-dashed rounded-md">
-            <p className="text-muted-foreground">No dishes added yet. Add your first dish to this meal.</p>
+          <div className="text-center py-6 border border-dashed rounded-md">
+            <p className="text-muted-foreground text-sm">No dishes added yet. Add your first dish to this meal.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -253,8 +253,8 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
               
               return (
                 <Card key={index} className="overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="space-y-4">
+                  <CardContent className="p-2 sm:p-4">
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <Label className="text-sm">Select Dish</Label>
@@ -279,12 +279,12 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="mr-2"
+                            className="mr-1 sm:mr-2"
                             onClick={() => handleEditDish(mealDish.dishId)}
                             title="Edit this dish"
                           >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit Dish
+                            <Edit className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Edit</span>
                           </Button>
                           <Button
                             type="button"
@@ -302,8 +302,8 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                           <div className="space-y-1">
                             <div className="flex items-center">
                               <div className="flex-1">
-                                <Label className="text-sm mb-1 block">Scaling Factor</Label>
-                                <div className="flex gap-2 items-center">
+                                <Label className="text-xs sm:text-sm mb-1 block">Scaling Factor</Label>
+                                <div className="flex gap-1 sm:gap-2 items-center">
                                   <Input
                                     type="number"
                                     min="0.1"
@@ -316,12 +316,12 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                                     onBlur={() => handleScalingFactorBlur(index)}
                                     onChange={(e) => handleScalingFactorChange(index, e)}
                                     onKeyDown={handleScalingFactorKeyPress}
-                                    className="w-24"
+                                    className="w-16 sm:w-24"
                                   />
-                                  <span className="text-sm text-muted-foreground">× {dish.name}</span>
+                                  <span className="text-xs sm:text-sm text-muted-foreground truncate">× {dish.name}</span>
                                 </div>
                               </div>
-                              <div className="flex flex-col ml-4">
+                              <div className="flex flex-col ml-2 sm:ml-4">
                                 <Button
                                   type="button"
                                   variant="outline"
@@ -347,8 +347,8 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                           
                           {dishNutrition && (
                             <div className="text-sm pt-2 border-t">
-                              <p className="text-muted-foreground mb-1">Nutrition (with scaling):</p>
-                              <div className="grid grid-cols-4 gap-2 text-xs">
+                              <p className="text-muted-foreground mb-1 text-xs sm:text-sm">Nutrition (with scaling):</p>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                                 <div>
                                   <p className="text-muted-foreground">Calories</p>
                                   <p className="font-medium">{Math.round(dishNutrition.calories * mealDish.scalingFactor)}</p>
@@ -381,7 +381,7 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
 
       {/* Nutrition Summary */}
       {nutritionSummary && (
-        <div className="rounded-md border p-4 space-y-4">
+        <div className="rounded-md border p-2 sm:p-4 space-y-3">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium flex items-center">
               <Calculator className="h-4 w-4 mr-2" /> 
@@ -392,54 +392,54 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
             </Badge>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <h4 className="font-medium">Total Meal</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Total Meal</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
                 <div>
-                  <p className="text-muted-foreground">Calories</p>
+                  <p className="text-muted-foreground text-xs">Calories</p>
                   <p className="font-medium">{Math.round(nutritionSummary.calories)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Protein</p>
+                  <p className="text-muted-foreground text-xs">Protein</p>
                   <p className="font-medium">{formatNutritionValue(nutritionSummary.protein)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Carbs</p>
+                  <p className="text-muted-foreground text-xs">Carbs</p>
                   <p className="font-medium">{formatNutritionValue(nutritionSummary.carbs)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Fat</p>
+                  <p className="text-muted-foreground text-xs">Fat</p>
                   <p className="font-medium">{formatNutritionValue(nutritionSummary.fat)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Fiber</p>
+                  <p className="text-muted-foreground text-xs">Fiber</p>
                   <p className="font-medium">{formatNutritionValue(nutritionSummary.fiber)}</p>
                 </div>
               </div>
             </div>
             
-            <div className="space-y-3">
-              <h4 className="font-medium">Per Serving</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Per Serving</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
                 <div>
-                  <p className="text-muted-foreground">Calories</p>
+                  <p className="text-muted-foreground text-xs">Calories</p>
                   <p className="font-medium">{Math.round(nutritionPerServing?.calories || 0)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Protein</p>
+                  <p className="text-muted-foreground text-xs">Protein</p>
                   <p className="font-medium">{formatNutritionValue(nutritionPerServing?.protein || 0)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Carbs</p>
+                  <p className="text-muted-foreground text-xs">Carbs</p>
                   <p className="font-medium">{formatNutritionValue(nutritionPerServing?.carbs || 0)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Fat</p>
+                  <p className="text-muted-foreground text-xs">Fat</p>
                   <p className="font-medium">{formatNutritionValue(nutritionPerServing?.fat || 0)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Fiber</p>
+                  <p className="text-muted-foreground text-xs">Fiber</p>
                   <p className="font-medium">{formatNutritionValue(nutritionPerServing?.fiber || 0)}</p>
                 </div>
               </div>
@@ -447,9 +447,9 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
           </div>
           
           {/* Macronutrient Distribution */}
-          <div className="pt-3 border-t">
-            <p className="text-sm mb-2">Macronutrient Distribution (per serving)</p>
-            <div className="flex gap-3">
+          <div className="pt-2 border-t">
+            <p className="text-xs sm:text-sm mb-2">Macronutrient Distribution (per serving)</p>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               {calculateMacroPercentages(nutritionPerServing || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, nutrients: {} })
                 .filter(macro => macro.value > 0)
                 .map((macro, index) => (
@@ -458,7 +458,7 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                       className="h-3 w-3 rounded-full mr-1.5" 
                       style={{ backgroundColor: macro.color }}
                     />
-                    <span className="text-xs">{macro.label} {Math.round(macro.value)}%</span>
+                    <span className="text-[10px] sm:text-xs">{macro.label} {Math.round(macro.value)}%</span>
                   </div>
                 ))
               }
@@ -468,7 +468,7 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
       )}
 
       {/* Form Actions */}
-      <div className="flex justify-end space-x-2">
+      <div className="flex justify-end space-x-2 pt-2">
         <Button type="button" variant="outline" onClick={onComplete}>
           Cancel
         </Button>

@@ -1,104 +1,64 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
+import { ArrowLeft } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import IngredientForm from "@/components/IngredientForm";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 const EditIngredient = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { ingredients } = useData();
-  
-  const ingredient = id ? ingredients.find(ing => ing.id === id) : undefined;
-  const isNewIngredient = !id || !ingredient;
-  
-  // Calculate macronutrient calorie distribution for the chart
-  const getMacroCaloriesData = () => {
-    if (!ingredient) return [];
-    
-    const proteinCalories = ingredient.protein * 4;
-    const carbsCalories = ingredient.carbs * 4;
-    const fatCalories = ingredient.fat * 9;
-    
-    return [
-      { name: 'Protein', value: proteinCalories, color: '#ef4444' },
-      { name: 'Carbs', value: carbsCalories, color: '#22c55e' },
-      { name: 'Fat', value: fatCalories, color: '#eab308' }
-    ];
+  const [ingredient, setIngredient] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Find the ingredient with the matching ID
+    if (id) {
+      const foundIngredient = ingredients.find(i => i.id === id);
+      if (foundIngredient) {
+        setIngredient(foundIngredient);
+      } else {
+        setError("Ingredient not found");
+      }
+    } else {
+      setError("No ingredient ID provided");
+    }
+    setLoading(false);
+  }, [id, ingredients]);
+
+  // Handle completion of the form
+  const handleComplete = () => {
+    navigate("/ingredients");
   };
-  
-  const macroCaloriesData = getMacroCaloriesData();
-  
+
   return (
-    <div className="min-h-screen pb-16">
-      <Header 
-        title={isNewIngredient ? "Add Ingredient" : "Edit Ingredient"} 
-        description={isNewIngredient 
-          ? "Add a new ingredient with nutritional details" 
-          : `Edit nutritional details for ${ingredient?.name}`} 
-      />
-      
-      <main className="container max-w-4xl">
-        <div className="mb-6">
-          <Button 
-            variant="ghost" 
-            className="flex items-center gap-2" 
-            onClick={() => navigate('/ingredients')}
-          >
-            <ArrowLeft size={16} />
-            Back to Ingredients
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <IngredientForm 
-              existingIngredient={ingredient} 
-              onComplete={() => navigate('/ingredients')} 
-            />
+    <main className="container max-w-4xl">
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/ingredients")}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft size={16} />
+          Back to Ingredients
+        </Button>
+      </div>
+
+      {loading ? (
+        <div>Loading...</div>
+      ) : error ? (
+        <div className="text-red-500">{error}</div>
+      ) : (
+        <>
+          <h1 className="text-2xl font-bold mb-4">Edit Ingredient</h1>
+          <div className="bg-card p-2 sm:p-4 rounded-lg shadow-sm">
+            <IngredientForm existingIngredient={ingredient} onComplete={handleComplete} />
           </div>
-          
-          {!isNewIngredient && ingredient && (
-            <div className="bg-card p-6 rounded-lg shadow-sm">
-              <h3 className="text-lg font-medium mb-4">Calories from Macronutrients</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={macroCaloriesData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {macroCaloriesData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => [`${value.toFixed(1)} kcal`, 'Calories']} 
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="text-sm text-muted-foreground mt-4">
-                <p>This chart shows the distribution of calories from different macronutrients in this ingredient.</p>
-                <ul className="list-disc list-inside mt-2">
-                  <li>Protein: 4 calories per gram</li>
-                  <li>Carbohydrates: 4 calories per gram</li>
-                  <li>Fat: 9 calories per gram</li>
-                </ul>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+        </>
+      )}
+    </main>
   );
 };
 

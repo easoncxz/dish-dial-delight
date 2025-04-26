@@ -1,48 +1,64 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
+import { ArrowLeft } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import MealForm from "@/components/MealForm";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 
 const EditMeal = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { meals } = useData();
-  
-  const meal = id ? meals.find(m => m.id === id) : null;
-  const isNewMeal = !id || !meal;
-  
+  const [meal, setMeal] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Find the meal with the matching ID
+    if (id) {
+      const foundMeal = meals.find(m => m.id === id);
+      if (foundMeal) {
+        setMeal(foundMeal);
+      } else {
+        setError("Meal not found");
+      }
+    } else {
+      setError("No meal ID provided");
+    }
+    setLoading(false);
+  }, [id, meals]);
+
+  // Handle completion of the form
+  const handleComplete = () => {
+    navigate("/meals");
+  };
+
   return (
-    <div className="min-h-screen pb-16">
-      <Header 
-        title={isNewMeal ? "Add Meal" : "Edit Meal"} 
-        description={isNewMeal 
-          ? "Create a new meal by combining dishes" 
-          : `Edit ${meal?.name}`} 
-      />
-      
-      <main className="container max-w-4xl">
-        <div className="mb-6">
-          <Button 
-            variant="ghost" 
-            className="flex items-center gap-2" 
-            onClick={() => navigate('/meals')}
-          >
-            <ArrowLeft size={16} />
-            Back to Meals
-          </Button>
-        </div>
-        
-        <div className="bg-card p-6 rounded-lg shadow-sm">
-          <MealForm 
-            existingMeal={meal} 
-            onComplete={() => navigate('/meals')} 
-          />
-        </div>
-      </main>
-    </div>
+    <main className="container max-w-4xl">
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/meals")}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft size={16} />
+          Back to Meals
+        </Button>
+      </div>
+
+      {loading ? (
+        <div>Loading...</div>
+      ) : error ? (
+        <div className="text-red-500">{error}</div>
+      ) : (
+        <>
+          <h1 className="text-2xl font-bold mb-4">Edit Meal</h1>
+          <div className="bg-card p-2 sm:p-4 rounded-lg shadow-sm">
+            <MealForm existingMeal={meal} onComplete={handleComplete} />
+          </div>
+        </>
+      )}
+    </main>
   );
 };
 

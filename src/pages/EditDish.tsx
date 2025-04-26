@@ -1,111 +1,64 @@
-
-import React from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
+import { ArrowLeft } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import DishForm from "@/components/DishForm";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 const EditDish = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { dishes, calculateDishNutrition } = useData();
-  
-  const dish = id ? dishes.find(d => d.id === id) : undefined;
-  const isNewDish = !id || !dish;
-  
-  // Calculate macronutrient calorie distribution for the chart
-  const getMacroCaloriesData = () => {
-    if (!dish) return [];
-    
-    const nutrition = calculateDishNutrition(dish);
-    const proteinCalories = nutrition.protein * 4;
-    const carbsCalories = nutrition.carbs * 4;
-    const fatCalories = nutrition.fat * 9;
-    
-    return [
-      { name: 'Protein', value: proteinCalories, color: '#10B981' },
-      { name: 'Carbs', value: carbsCalories, color: '#3B82F6' },
-      { name: 'Fat', value: fatCalories, color: '#F97316' }
-    ];
+  const { dishes } = useData();
+  const [dish, setDish] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Find the dish with the matching ID
+    if (id) {
+      const foundDish = dishes.find(d => d.id === id);
+      if (foundDish) {
+        setDish(foundDish);
+      } else {
+        setError("Dish not found");
+      }
+    } else {
+      setError("No dish ID provided");
+    }
+    setLoading(false);
+  }, [id, dishes]);
+
+  // Handle completion of the form
+  const handleComplete = () => {
+    navigate("/dishes");
   };
-  
-  const macroCaloriesData = getMacroCaloriesData();
-  
+
   return (
-    <div className="min-h-screen pb-16">
-      <Header 
-        title={isNewDish ? "Add Dish" : "Edit Dish"} 
-        description={isNewDish 
-          ? "Create a new dish by combining ingredients" 
-          : `Edit ${dish?.name}`} 
-      />
-      
-      <main className="container max-w-4xl">
-        <div className="mb-6">
-          <Button 
-            variant="ghost" 
-            className="flex items-center gap-2" 
-            onClick={() => navigate('/dishes')}
-          >
-            <ArrowLeft size={16} />
-            Back to Dishes
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <DishForm 
-              existingDish={dish} 
-              onComplete={() => navigate('/dishes')} 
-            />
+    <main className="container max-w-4xl">
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/dishes")}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft size={16} />
+          Back to Dishes
+        </Button>
+      </div>
+
+      {loading ? (
+        <div>Loading...</div>
+      ) : error ? (
+        <div className="text-red-500">{error}</div>
+      ) : (
+        <>
+          <h1 className="text-2xl font-bold mb-4">Edit Dish</h1>
+          <div className="bg-card p-2 sm:p-4 rounded-lg shadow-sm">
+            <DishForm existingDish={dish} onComplete={handleComplete} />
           </div>
-          
-          {!isNewDish && dish && (
-            <div className="bg-card p-6 rounded-lg shadow-sm">
-              <h3 className="text-lg font-medium mb-4">Calories from Macronutrients</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={macroCaloriesData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {macroCaloriesData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value) => {
-                      if (typeof value === 'number') {
-                        return [`${value.toFixed(1)} kcal`, 'Calories'];
-                      }
-                      return [value, 'Calories'];
-                    }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="text-sm text-muted-foreground mt-4">
-                <p>This chart shows the distribution of calories from different macronutrients in this dish.</p>
-                <ul className="list-disc list-inside mt-2">
-                  <li>Protein: 4 calories per gram</li>
-                  <li>Carbohydrates: 4 calories per gram</li>
-                  <li>Fat: 9 calories per gram</li>
-                </ul>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+        </>
+      )}
+    </main>
   );
 };
 
