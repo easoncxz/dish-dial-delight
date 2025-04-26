@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, Edit, Trash2, Utensils, Grid, List, ChevronDown } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Utensils, Grid, List, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -77,6 +77,8 @@ const DishList = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [view, setView] = useState<"card" | "table">("card");
+  const [sortColumn, setSortColumn] = useState<"name" | "protein" | "carbs" | "fat" | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
   const filteredDishes = useMemo(() => {
     return dishes.filter(dish => 
@@ -98,6 +100,58 @@ const DishList = () => {
     const ingredient = ingredients.find(ing => ing.id === id);
     return ingredient ? ingredient.name : "Unknown Ingredient";
   };
+  
+  const handleSort = (column: "name" | "protein" | "carbs" | "fat") => {
+    if (sortColumn === column) {
+      // Toggle direction if same column clicked
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // New column clicked, set as active with default direction
+      setSortColumn(column);
+      setSortDirection("desc");
+    }
+  };
+  
+  const sortedDishes = useMemo(() => {
+    const dishes = [...filteredDishes];
+    
+    if (!sortColumn) return dishes;
+    
+    return dishes.sort((dishA, dishB) => {
+      if (sortColumn === "name") {
+        const comparison = dishA.name.localeCompare(dishB.name);
+        return sortDirection === "asc" ? comparison : -comparison;
+      }
+      
+      const nutritionA = calculateDishNutrition(dishA);
+      const nutritionB = calculateDishNutrition(dishB);
+      
+      // Calculate percentage of calories from macros rather than absolute amounts
+      const macrosA = calculateMacroPercentages(nutritionA);
+      const macrosB = calculateMacroPercentages(nutritionB);
+      
+      // Find the percentage value for the selected macro
+      const getMacroValue = (macros: {label: string; value: number; color: string}[], macroName: string) => {
+        const macro = macros.find(m => m.label.toLowerCase() === macroName);
+        return macro ? macro.value : 0;
+      };
+      
+      let comparison = 0;
+      switch (sortColumn) {
+        case "protein":
+          comparison = getMacroValue(macrosA, "protein") - getMacroValue(macrosB, "protein");
+          break;
+        case "carbs":
+          comparison = getMacroValue(macrosA, "carbs") - getMacroValue(macrosB, "carbs");
+          break;
+        case "fat":
+          comparison = getMacroValue(macrosA, "fat") - getMacroValue(macrosB, "fat");
+          break;
+      }
+      
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [filteredDishes, sortColumn, sortDirection, calculateDishNutrition]);
   
   return (
     <>
@@ -150,7 +204,7 @@ const DishList = () => {
                   exit={{ opacity: 0 }}
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                 >
-                  {filteredDishes.map((dish) => {
+                  {sortedDishes.map((dish) => {
                     const nutrition = calculateDishNutrition(dish);
                     
                     return (
@@ -240,18 +294,66 @@ const DishList = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Dish</TableHead>
+                          <TableHead 
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleSort("name")}
+                          >
+                            <div className="flex items-center">
+                              Dish
+                              {sortColumn === "name" && (
+                                sortDirection === "asc" ? 
+                                <ChevronUp className="ml-1 h-4 w-4" /> : 
+                                <ChevronDown className="ml-1 h-4 w-4" />
+                              )}
+                            </div>
+                          </TableHead>
                           <TableHead>Ingredients</TableHead>
                           <TableHead className="text-right">Calories</TableHead>
-                          <TableHead className="text-right">Protein (g)</TableHead>
-                          <TableHead className="text-right">Carbs (g)</TableHead>
-                          <TableHead className="text-right">Fat (g)</TableHead>
+                          <TableHead 
+                            className="text-right cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleSort("protein")}
+                          >
+                            <div className="flex items-center justify-end">
+                              Protein (g)
+                              {sortColumn === "protein" && (
+                                sortDirection === "asc" ? 
+                                <ChevronUp className="ml-1 h-4 w-4" /> : 
+                                <ChevronDown className="ml-1 h-4 w-4" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="text-right cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleSort("carbs")}
+                          >
+                            <div className="flex items-center justify-end">
+                              Carbs (g)
+                              {sortColumn === "carbs" && (
+                                sortDirection === "asc" ? 
+                                <ChevronUp className="ml-1 h-4 w-4" /> : 
+                                <ChevronDown className="ml-1 h-4 w-4" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="text-right cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleSort("fat")}
+                          >
+                            <div className="flex items-center justify-end">
+                              Fat (g)
+                              {sortColumn === "fat" && (
+                                sortDirection === "asc" ? 
+                                <ChevronUp className="ml-1 h-4 w-4" /> : 
+                                <ChevronDown className="ml-1 h-4 w-4" />
+                              )}
+                            </div>
+                          </TableHead>
                           <TableHead className="text-right">Fiber (g)</TableHead>
                           <TableHead className="w-[100px]">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredDishes.map((dish) => {
+                        {sortedDishes.map((dish) => {
                           const nutrition = calculateDishNutrition(dish);
                           
                           return (
