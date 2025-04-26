@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, 
@@ -15,12 +16,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useData } from "@/context/DataContext";
 import { Meal, NutritionSummary } from "@/types";
-import MealForm from "./MealForm";
 import { calculateMacroPercentages } from "@/utils/calculations";
 import { 
   Table, 
@@ -102,11 +101,10 @@ const MacroDistributionBorder = ({ nutrition }: { nutrition: NutritionSummary })
 const MealList = () => {
   const { meals, dishes, deleteMeal, calculateMealNutrition, calculateMealNutritionPerServing } = useData();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [view, setView] = useState<"card" | "table">("card");
   const [sortColumn, setSortColumn] = useState<"name" | "servings" | "protein" | "carbs" | "fat" | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const navigate = useNavigate();
   
   const filteredMeals = useMemo(() => {
     return meals.filter(meal => 
@@ -115,13 +113,11 @@ const MealList = () => {
   }, [meals, searchQuery]);
   
   const handleEdit = (meal: Meal) => {
-    setEditingMeal(meal);
-    setIsDialogOpen(true);
+    navigate(`/meals/edit/${meal.id}`);
   };
   
   const handleAddNew = () => {
-    setEditingMeal(null);
-    setIsDialogOpen(true);
+    navigate('/meals/new');
   };
   
   const getDishName = (id: string) => {
@@ -191,6 +187,10 @@ const MealList = () => {
     return Math.round(value * 10) / 10 + "g";
   };
 
+  const handleEditDish = (dishId: string) => {
+    navigate(`/dishes/edit/${dishId}`);
+  };
+  
   return (
     <>
       <div className="space-y-4">
@@ -278,7 +278,7 @@ const MealList = () => {
                                   {meal.dishes.length > 0 ? (
                                     meal.dishes.map((mealDish, index) => (
                                       <div key={index} className="flex justify-between items-center">
-                                        <span className="text-sm">{getDishName(mealDish.dishId)}</span>
+                                        <span className="text-sm cursor-pointer" onClick={() => handleEditDish(mealDish.dishId)}>{getDishName(mealDish.dishId)}</span>
                                         <span className="text-sm font-medium">
                                           {mealDish.scalingFactor}x
                                         </span>
@@ -445,7 +445,7 @@ const MealList = () => {
                                 <div className="flex flex-col gap-1 max-w-[250px]">
                                   {meal.dishes.slice(0, 3).map((mealDish, index) => (
                                     <div key={index} className="text-xs flex justify-between">
-                                      <span>{getDishName(mealDish.dishId)}</span>
+                                      <span className="cursor-pointer" onClick={() => handleEditDish(mealDish.dishId)}>{getDishName(mealDish.dishId)}</span>
                                       <span className="font-medium ml-2">{mealDish.scalingFactor}x</span>
                                     </div>
                                   ))}
@@ -520,20 +520,6 @@ const MealList = () => {
           )}
         </AnimatePresence>
       </div>
-      
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingMeal ? "Edit Meal" : "Create New Meal"}
-            </DialogTitle>
-          </DialogHeader>
-          <MealForm 
-            existingMeal={editingMeal} 
-            onComplete={() => setIsDialogOpen(false)} 
-          />
-        </DialogContent>
-      </Dialog>
     </>
   );
 };

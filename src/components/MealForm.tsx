@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { X, Plus, Trash2, Calculator } from "lucide-react";
+import { X, Plus, Trash2, Calculator, Edit, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,7 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
   const { dishes, addMeal, updateMeal, calculateDishNutrition, calculateMealNutrition, calculateMealNutritionPerServing } = useData();
   const [nutritionSummary, setNutritionSummary] = useState<NutritionSummary | null>(null);
   const [nutritionPerServing, setNutritionPerServing] = useState<NutritionSummary | null>(null);
+  const navigate = useNavigate();
   
   const [name, setName] = useState(existingMeal?.name || "");
   const [description, setDescription] = useState(existingMeal?.description || "");
@@ -181,6 +183,10 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
     return Math.round(value * 10) / 10 + "g";
   };
   
+  const handleEditDish = (dishId: string) => {
+    navigate(`/dishes/edit/${dishId}`);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Meal Info */}
@@ -268,15 +274,27 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                             </SelectContent>
                           </Select>
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="ml-2"
-                          onClick={() => handleRemoveDish(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center ml-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mr-2"
+                            onClick={() => handleEditDish(mealDish.dishId)}
+                            title="Edit this dish"
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit Dish
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveDish(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
 
                       {dish && (
