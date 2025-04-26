@@ -71,6 +71,28 @@ const MacroNutrientPieChart = ({ nutrition }: { nutrition: NutritionSummary }) =
   );
 };
 
+// New component for the macro distribution border
+const MacroDistributionBorder = ({ nutrition }: { nutrition: NutritionSummary }) => {
+  const macros = calculateMacroPercentages(nutrition);
+  
+  return (
+    <div className="absolute top-0 left-0 right-0 h-4 flex">
+      {macros.map((macro, index) => (
+        macro.value > 0 ? (
+          <div 
+            key={index} 
+            style={{ 
+              width: `${macro.value}%`,
+              background: `linear-gradient(to bottom, ${macro.color} 0%, transparent 100%)`
+            }} 
+            className="h-full"
+          />
+        ) : null
+      ))}
+    </div>
+  );
+};
+
 const DishList = () => {
   const { dishes, ingredients, deleteDish, calculateDishNutrition } = useData();
   const [searchQuery, setSearchQuery] = useState("");
@@ -357,14 +379,15 @@ const DishList = () => {
                           const nutrition = calculateDishNutrition(dish);
                           
                           return (
-                            <TableRow key={dish.id}>
-                              <TableCell className="font-medium flex items-center">
+                            <TableRow key={dish.id} className="relative">
+                              <MacroDistributionBorder nutrition={nutrition} />
+                              <TableCell className="font-medium flex items-center pt-6">
                                 <div className="h-5 w-5 mr-2 flex items-center justify-center">
                                   <MacroNutrientPieChart nutrition={nutrition} />
                                 </div>
                                 {dish.name}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="pt-6">
                                 <div className="flex flex-wrap gap-1.5 max-w-[250px]">
                                   {dish.ingredients.length > 0 ? (
                                     dish.ingredients.map((item, index) => (
@@ -377,22 +400,22 @@ const DishList = () => {
                                   )}
                                 </div>
                               </TableCell>
-                              <TableCell className="text-right font-medium">
+                              <TableCell className="text-right font-medium pt-6">
                                 {Math.round(nutrition.calories)}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right pt-6">
                                 {Math.round(nutrition.protein * 10) / 10}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right pt-6">
                                 {Math.round(nutrition.carbs * 10) / 10}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right pt-6">
                                 {Math.round(nutrition.fat * 10) / 10}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right pt-6">
                                 {Math.round(nutrition.fiber * 10) / 10}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="pt-6">
                                 <div className="flex items-center gap-2">
                                   <Button
                                     variant="ghost"
