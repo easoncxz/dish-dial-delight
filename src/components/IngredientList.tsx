@@ -1,20 +1,116 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, Edit, Trash2, Salad } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Salad, Grid, List, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useData } from "@/context/DataContext";
-import { Ingredient } from "@/types";
+import { Ingredient, NutritionSummary } from "@/types";
 import IngredientForm from "./IngredientForm";
+import { calculateMacroPercentages } from "@/utils/calculations";
+import { 
+  Table, 
+  TableHeader, 
+  TableBody, 
+  TableRow, 
+  TableHead, 
+  TableCell 
+} from "@/components/ui/table";
+
+// Small MacroNutrient Pie Chart Component
+const MacroNutrientPieChart = ({ ingredient }: { ingredient: Ingredient }) => {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const nutrition: NutritionSummary = {
+    calories: ingredient.calories,
+    protein: ingredient.protein,
+    carbs: ingredient.carbs,
+    fat: ingredient.fat,
+    fiber: ingredient.fiber,
+    nutrients: ingredient.nutrients || {}
+  };
+  const macros = calculateMacroPercentages(nutrition);
+  
+  // Render the pie chart using divs
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const chart = chartRef.current;
+    
+    // Clear previous chart
+    chart.innerHTML = "";
+    
+    let cumulativeAngle = 0;
+    
+    macros.forEach((macro) => {
+      if (macro.value <= 0) return;
+      
+      const segment = document.createElement("div");
+      segment.className = "absolute inset-0";
+      
+      // Calculate segment styles
+      const startAngle = cumulativeAngle;
+      const angleSize = (macro.value / 100) * 360;
+      cumulativeAngle += angleSize;
+      
+      // Set the clip path for the segment
+      segment.style.backgroundColor = macro.color;
+      segment.style.clipPath = `path('M ${10} ${10} L ${10 + 10 * Math.cos((startAngle * Math.PI) / 180)} ${
+        10 + 10 * Math.sin((startAngle * Math.PI) / 180)
+      } A 10 10 0 ${angleSize > 180 ? 1 : 0} 1 ${10 + 10 * Math.cos(((startAngle + angleSize) * Math.PI) / 180)} ${
+        10 + 10 * Math.sin(((startAngle + angleSize) * Math.PI) / 180)
+      } Z')`;
+      
+      chart.appendChild(segment);
+    });
+  }, [macros]);
+
+  return (
+    <div className="relative w-[20px] h-[20px] rounded-full">
+      <div ref={chartRef} className="absolute inset-0 rounded-full overflow-hidden" />
+      <div className="absolute inset-0 rounded-full border border-muted-foreground/10" />
+    </div>
+  );
+};
+
+// Component for the macro distribution border
+const MacroDistributionBorder = ({ ingredient }: { ingredient: Ingredient }) => {
+  const nutrition: NutritionSummary = {
+    calories: ingredient.calories,
+    protein: ingredient.protein,
+    carbs: ingredient.carbs,
+    fat: ingredient.fat,
+    fiber: ingredient.fiber,
+    nutrients: ingredient.nutrients || {}
+  };
+  const macros = calculateMacroPercentages(nutrition);
+  
+  return (
+    <div className="absolute top-0 left-0 right-0 h-4 flex">
+      {macros.map((macro, index) => (
+        macro.value > 0 ? (
+          <div 
+            key={index} 
+            style={{ 
+              width: `${macro.value}%`,
+              background: `linear-gradient(to bottom, ${macro.color} 0%, transparent 100%)`
+            }} 
+            className="h-full"
+          />
+        ) : null
+      ))}
+    </div>
+  );
+};
 
 const IngredientList = () => {
   const { ingredients, deleteIngredient } = useData();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
+  const [view, setView] = useState<"card" | "table">("card");
+  const [sortColumn, setSortColumn] = useState<"name" | "calories" | "protein" | "carbs" | "fat" | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
   const filteredIngredients = useMemo(() => {
     return ingredients.filter(ingredient => 
@@ -32,6 +128,79 @@ const IngredientList = () => {
     setIsDialogOpen(true);
   };
   
+  const handleSort = (column: "name" | "calories" | "protein" | "carbs" | "fat") => {
+    if (sortColumn === column) {
+      // Toggle direction if same column clicked
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // New column clicked, set as active with default direction
+      setSortColumn(column);
+      setSortDirection("desc");
+    }
+  };
+  
+  const sortedIngredients = useMemo(() => {
+    const ingredientsList = [...filteredIngredients];
+    
+    if (!sortColumn) return ingredientsList;
+    
+    return ingredientsList.sort((a, b) => {
+      if (sortColumn === "name") {
+        const comparison = a.name.localeCompare(b.name);
+        return sortDirection === "asc" ? comparison : -comparison;
+      }
+      
+      const nutritionA: NutritionSummary = {
+        calories: a.calories,
+        protein: a.protein,
+        carbs: a.carbs,
+        fat: a.fat,
+        fiber: a.fiber,
+        nutrients: a.nutrients || {}
+      };
+      
+      const nutritionB: NutritionSummary = {
+        calories: b.calories,
+        protein: b.protein,
+        carbs: b.carbs,
+        fat: b.fat,
+        fiber: b.fiber,
+        nutrients: b.nutrients || {}
+      };
+      
+      // For calories, compare the raw values
+      if (sortColumn === "calories") {
+        const comparison = nutritionA.calories - nutritionB.calories;
+        return sortDirection === "asc" ? comparison : -comparison;
+      }
+      
+      // For macros, compare the calculated macro percentages
+      const macrosA = calculateMacroPercentages(nutritionA);
+      const macrosB = calculateMacroPercentages(nutritionB);
+      
+      // Find the percentage value for the selected macro
+      const getMacroValue = (macros: {label: string; value: number; color: string}[], macroName: string) => {
+        const macro = macros.find(m => m.label.toLowerCase() === macroName);
+        return macro ? macro.value : 0;
+      };
+      
+      let comparison = 0;
+      switch (sortColumn) {
+        case "protein":
+          comparison = getMacroValue(macrosA, "protein") - getMacroValue(macrosB, "protein");
+          break;
+        case "carbs":
+          comparison = getMacroValue(macrosA, "carbs") - getMacroValue(macrosB, "carbs");
+          break;
+        case "fat":
+          comparison = getMacroValue(macrosA, "fat") - getMacroValue(macrosB, "fat");
+          break;
+      }
+      
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [filteredIngredients, sortColumn, sortDirection]);
+  
   return (
     <>
       <div className="space-y-4">
@@ -45,112 +214,269 @@ const IngredientList = () => {
               className="pl-9 w-full sm:w-[300px]"
             />
           </div>
-          <Button onClick={handleAddNew}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Ingredient
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="bg-muted rounded-md p-0.5 flex items-center">
+              <Button
+                variant={view === "card" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 px-2"
+                onClick={() => setView("card")}
+              >
+                <Grid className="h-4 w-4 mr-1" />
+                Cards
+              </Button>
+              <Button
+                variant={view === "table" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 px-2"
+                onClick={() => setView("table")}
+              >
+                <List className="h-4 w-4 mr-1" />
+                Table
+              </Button>
+            </div>
+            <Button onClick={handleAddNew}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Ingredient
+            </Button>
+          </div>
         </div>
         
         <AnimatePresence>
           {filteredIngredients.length > 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-            >
-              {filteredIngredients.map((ingredient) => (
+            <>
+              {view === "card" ? (
                 <motion.div
-                  key={ingredient.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  layout
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                 >
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg flex items-center">
-                        <Salad className="h-5 w-5 mr-2 text-primary" />
-                        {ingredient.name}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pb-2">
-                      <Tabs defaultValue="macros">
-                        <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="macros">Macros</TabsTrigger>
-                          <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="macros" className="pt-4">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <p className="text-xs text-muted-foreground">Calories</p>
-                              <p className="font-medium">{ingredient.calories}</p>
+                  {sortedIngredients.map((ingredient) => (
+                    <motion.div
+                      key={ingredient.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      layout
+                    >
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg flex items-center">
+                            <div className="h-5 w-5 mr-2 text-primary flex items-center justify-center">
+                              <MacroNutrientPieChart ingredient={ingredient} />
                             </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">Protein</p>
-                              <p className="font-medium">{ingredient.protein}g</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">Carbs</p>
-                              <p className="font-medium">{ingredient.carbs}g</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">Fat</p>
-                              <p className="font-medium">{ingredient.fat}g</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">Fiber</p>
-                              <p className="font-medium">{ingredient.fiber}g</p>
-                            </div>
-                          </div>
-                        </TabsContent>
-                        <TabsContent value="nutrition" className="pt-4">
-                          <div className="max-h-24 overflow-y-auto">
-                            {Object.keys(ingredient.nutrients).length > 0 ? (
-                              <div className="space-y-1.5">
-                                {Object.entries(ingredient.nutrients).map(([key, nutrient]) => (
-                                  <div key={key} className="flex justify-between">
-                                    <span className="text-sm">{key}</span>
-                                    <span className="text-sm font-medium">
-                                      {nutrient.value}{nutrient.unit}
-                                    </span>
-                                  </div>
-                                ))}
+                            {ingredient.name}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pb-2">
+                          <Tabs defaultValue="macros">
+                            <TabsList className="grid w-full grid-cols-2">
+                              <TabsTrigger value="macros">Macros</TabsTrigger>
+                              <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="macros" className="pt-4">
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Calories</p>
+                                  <p className="font-medium">{ingredient.calories}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Protein</p>
+                                  <p className="font-medium">{ingredient.protein}g</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Carbs</p>
+                                  <p className="font-medium">{ingredient.carbs}g</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Fat</p>
+                                  <p className="font-medium">{ingredient.fat}g</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Fiber</p>
+                                  <p className="font-medium">{ingredient.fiber}g</p>
+                                </div>
                               </div>
-                            ) : (
-                              <p className="text-sm text-muted-foreground">No micronutrient data available</p>
-                            )}
+                            </TabsContent>
+                            <TabsContent value="nutrition" className="pt-4">
+                              <div className="max-h-24 overflow-y-auto">
+                                {Object.keys(ingredient.nutrients || {}).length > 0 ? (
+                                  <div className="space-y-1.5">
+                                    {Object.entries(ingredient.nutrients || {}).map(([key, nutrient]) => (
+                                      <div key={key} className="flex justify-between">
+                                        <span className="text-sm">{key}</span>
+                                        <span className="text-sm font-medium">
+                                          {nutrient.value}{nutrient.unit}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">No micronutrient data available</p>
+                                )}
+                              </div>
+                            </TabsContent>
+                          </Tabs>
+                        </CardContent>
+                        <CardFooter className="pt-2">
+                          <div className="flex space-x-2 w-full">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => handleEdit(ingredient)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1 text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                              onClick={() => deleteIngredient(ingredient.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
                           </div>
-                        </TabsContent>
-                      </Tabs>
-                    </CardContent>
-                    <CardFooter className="pt-2">
-                      <div className="flex space-x-2 w-full">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="flex-1"
-                          onClick={() => handleEdit(ingredient)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="flex-1 text-destructive hover:text-destructive-foreground hover:bg-destructive"
-                          onClick={() => deleteIngredient(ingredient.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
-                        </Button>
-                      </div>
-                    </CardFooter>
-                  </Card>
+                        </CardFooter>
+                      </Card>
+                    </motion.div>
+                  ))}
                 </motion.div>
-              ))}
-            </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead 
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleSort("name")}
+                          >
+                            <div className="flex items-center">
+                              Ingredient
+                              {sortColumn === "name" && (
+                                sortDirection === "asc" ? 
+                                <ChevronUp className="ml-1 h-4 w-4" /> : 
+                                <ChevronDown className="ml-1 h-4 w-4" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="text-right cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleSort("calories")}
+                          >
+                            <div className="flex items-center justify-end">
+                              Calories
+                              {sortColumn === "calories" && (
+                                sortDirection === "asc" ? 
+                                <ChevronUp className="ml-1 h-4 w-4" /> : 
+                                <ChevronDown className="ml-1 h-4 w-4" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="text-right cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleSort("protein")}
+                          >
+                            <div className="flex items-center justify-end">
+                              Protein (g)
+                              {sortColumn === "protein" && (
+                                sortDirection === "asc" ? 
+                                <ChevronUp className="ml-1 h-4 w-4" /> : 
+                                <ChevronDown className="ml-1 h-4 w-4" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="text-right cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleSort("carbs")}
+                          >
+                            <div className="flex items-center justify-end">
+                              Carbs (g)
+                              {sortColumn === "carbs" && (
+                                sortDirection === "asc" ? 
+                                <ChevronUp className="ml-1 h-4 w-4" /> : 
+                                <ChevronDown className="ml-1 h-4 w-4" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="text-right cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleSort("fat")}
+                          >
+                            <div className="flex items-center justify-end">
+                              Fat (g)
+                              {sortColumn === "fat" && (
+                                sortDirection === "asc" ? 
+                                <ChevronUp className="ml-1 h-4 w-4" /> : 
+                                <ChevronDown className="ml-1 h-4 w-4" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead className="text-right">Fiber (g)</TableHead>
+                          <TableHead className="w-[100px]">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedIngredients.map((ingredient) => (
+                          <TableRow key={ingredient.id} className="relative">
+                            <MacroDistributionBorder ingredient={ingredient} />
+                            <TableCell className="font-medium flex items-center pt-6">
+                              <div className="h-5 w-5 mr-2 flex items-center justify-center">
+                                <MacroNutrientPieChart ingredient={ingredient} />
+                              </div>
+                              {ingredient.name}
+                            </TableCell>
+                            <TableCell className="text-right font-medium pt-6">
+                              {Math.round(ingredient.calories)}
+                            </TableCell>
+                            <TableCell className="text-right pt-6">
+                              {Math.round(ingredient.protein * 10) / 10}
+                            </TableCell>
+                            <TableCell className="text-right pt-6">
+                              {Math.round(ingredient.carbs * 10) / 10}
+                            </TableCell>
+                            <TableCell className="text-right pt-6">
+                              {Math.round(ingredient.fat * 10) / 10}
+                            </TableCell>
+                            <TableCell className="text-right pt-6">
+                              {Math.round(ingredient.fiber * 10) / 10}
+                            </TableCell>
+                            <TableCell className="pt-6">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEdit(ingredient)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive hover:bg-destructive/10"
+                                  onClick={() => deleteIngredient(ingredient.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </motion.div>
+              )}
+            </>
           ) : (
             <motion.div
               initial={{ opacity: 0 }}
