@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { X, Plus, Trash2, Calculator, Edit, ExternalLink, ChevronDown, ChevronUp, ShoppingBag } from "lucide-react";
@@ -24,6 +24,74 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+
+// Small MacroNutrient Pie Chart Component
+const MacroNutrientPieChart = ({ nutrition }: { nutrition: NutritionSummary }) => {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const macros = calculateMacroPercentages(nutrition);
+  
+  // Render the pie chart using divs
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const chart = chartRef.current;
+    
+    // Clear previous chart
+    chart.innerHTML = "";
+    
+    let cumulativeAngle = 0;
+    
+    macros.forEach((macro) => {
+      if (macro.value <= 0) return;
+      
+      const segment = document.createElement("div");
+      segment.className = "absolute inset-0";
+      
+      // Calculate segment styles
+      const startAngle = cumulativeAngle;
+      const angleSize = (macro.value / 100) * 360;
+      cumulativeAngle += angleSize;
+      
+      // Set the clip path for the segment
+      segment.style.backgroundColor = macro.color;
+      segment.style.clipPath = `path('M ${10} ${10} L ${10 + 10 * Math.cos((startAngle * Math.PI) / 180)} ${
+        10 + 10 * Math.sin((startAngle * Math.PI) / 180)
+      } A 10 10 0 ${angleSize > 180 ? 1 : 0} 1 ${10 + 10 * Math.cos(((startAngle + angleSize) * Math.PI) / 180)} ${
+        10 + 10 * Math.sin(((startAngle + angleSize) * Math.PI) / 180)
+      } Z')`;
+      
+      chart.appendChild(segment);
+    });
+  }, [macros]);
+
+  return (
+    <div className="relative w-[20px] h-[20px] rounded-full">
+      <div ref={chartRef} className="absolute inset-0 rounded-full overflow-hidden" />
+      <div className="absolute inset-0 rounded-full border border-muted-foreground/10" />
+    </div>
+  );
+};
+
+// Component for the macro distribution border
+const MacroDistributionBorder = ({ nutrition }: { nutrition: NutritionSummary }) => {
+  const macros = calculateMacroPercentages(nutrition);
+  
+  return (
+    <div className="absolute top-0 left-0 right-0 h-4 flex">
+      {macros.map((macro, index) => (
+        macro.value > 0 ? (
+          <div 
+            key={index} 
+            style={{ 
+              width: `${macro.value}%`,
+              background: `linear-gradient(to bottom, ${macro.color} 0%, transparent 100%)`
+            }} 
+            className="h-full"
+          />
+        ) : null
+      ))}
+    </div>
+  );
+};
 
 interface MealFormProps {
   existingMeal: Meal | null;
@@ -349,6 +417,11 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                             onValueChange={(value) => handleChangeDish(index, value)}
                           >
                             <SelectTrigger className="mt-1">
+                              {dish && dishNutrition && (
+                                <div className="h-5 w-5 mr-2 flex items-center justify-center">
+                                  <MacroNutrientPieChart nutrition={dishNutrition} />
+                                </div>
+                              )}
                               <SelectValue placeholder="Select a dish" />
                             </SelectTrigger>
                             <SelectContent>
@@ -500,14 +573,18 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
 
       {/* Nutrition Summary */}
       {nutritionSummary && (
-        <div className="rounded-md border p-2 sm:p-4 space-y-3">
-          <div className="flex justify-between items-center">
+        <div className="rounded-md border p-2 sm:p-4 space-y-3 relative">
+          <MacroDistributionBorder nutrition={nutritionPerServing || nutritionSummary} />
+          <div className="flex justify-between items-center pt-2">
             <h3 className="text-lg font-medium flex items-center">
               <Calculator className="h-4 w-4 mr-2" /> 
               Nutrition Summary
             </h3>
-            <Badge variant="outline">
+            <Badge variant="outline" className="flex items-center">
               {servings} {servings === 1 ? "serving" : "servings"}
+              <div className="h-5 w-5 ml-2 flex items-center justify-center">
+                <MacroNutrientPieChart nutrition={nutritionPerServing || nutritionSummary} />
+              </div>
             </Badge>
           </div>
           
