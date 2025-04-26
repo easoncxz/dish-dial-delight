@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { X, Plus, Trash2, Calculator, Edit, ExternalLink } from "lucide-react";
+import { X, Plus, Trash2, Calculator, Edit, ExternalLink, ChevronDown, ChevronUp, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,16 +16,29 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useData } from "@/context/DataContext";
-import { Meal, Dish, MealDish, NutritionSummary } from "@/types";
+import { Meal, Dish, MealDish, NutritionSummary, DishIngredient, Ingredient } from "@/types";
 import { calculateMacroPercentages } from "@/utils/calculations";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface MealFormProps {
   existingMeal: Meal | null;
   onComplete: () => void;
 }
 
+interface ShoppingListItem {
+  ingredientId: string;
+  name: string;
+  totalQuantity: number;
+  dishes: { dishName: string; quantity: number; scalingFactor: number }[];
+}
+
 const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
-  const { dishes, addMeal, updateMeal, calculateDishNutrition, calculateMealNutrition, calculateMealNutritionPerServing } = useData();
+  const { dishes, ingredients, addMeal, updateMeal, calculateDishNutrition, calculateMealNutrition, calculateMealNutritionPerServing } = useData();
   const [nutritionSummary, setNutritionSummary] = useState<NutritionSummary | null>(null);
   const [nutritionPerServing, setNutritionPerServing] = useState<NutritionSummary | null>(null);
   const navigate = useNavigate();
@@ -39,6 +52,9 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
   
   // Add state to track temporary scaling factor values during input
   const [tempScalingFactors, setTempScalingFactors] = useState<Record<number, string>>({});
+  
+  // Add state for expanded ingredient details
+  const [expandedDishIngredients, setExpandedDishIngredients] = useState<string[]>([]);
   
   // Calculate nutrition whenever meal dishes or servings change
   useEffect(() => {
@@ -186,6 +202,74 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
   const handleEditDish = (dishId: string) => {
     navigate(`/dishes/edit/${dishId}`);
   };
+  
+  const toggleIngredientDetails = (dishId: string) => {
+    setExpandedDishIngredients(prev => {
+      if (prev.includes(dishId)) {
+        return prev.filter(id => id !== dishId);
+      } else {
+        return [...prev, dishId];
+      }
+    });
+  };
+  
+  // Get ingredients for a dish
+  const getDishIngredients = (dishId: string): DishIngredient[] => {
+    const dish = dishes.find(d => d.id === dishId);
+    return dish ? dish.ingredients : [];
+  };
+  
+  // Get ingredient name by id
+  const getIngredientName = (ingredientId: string): string => {
+    const ingredient = ingredients.find(i => i.id === ingredientId);
+    return ingredient ? ingredient.name : "Unknown Ingredient";
+  };
+  
+  // Generate shopping list
+  const shoppingList = useMemo(() => {
+    const itemsMap: Record<string, ShoppingListItem> = {};
+    
+    mealDishes.forEach(mealDish => {
+      const dish = dishes.find(d => d.id === mealDish.dishId);
+      if (!dish) return;
+      
+      dish.ingredients.forEach(ingredient => {
+        const ingredientId = ingredient.ingredientId;
+        const ingredientObj = ingredients.find(i => i.id === ingredientId);
+        if (!ingredientObj) return;
+        
+        // Calculate the scaled quantity
+        const scaledQuantity = ingredient.quantity * mealDish.scalingFactor;
+        
+        if (itemsMap[ingredientId]) {
+          // Update existing item
+          itemsMap[ingredientId].totalQuantity += scaledQuantity;
+          itemsMap[ingredientId].dishes.push({
+            dishName: dish.name,
+            quantity: ingredient.quantity,
+            scalingFactor: mealDish.scalingFactor
+          });
+        } else {
+          // Create new item
+          itemsMap[ingredientId] = {
+            ingredientId,
+            name: ingredientObj.name,
+            totalQuantity: scaledQuantity,
+            dishes: [
+              {
+                dishName: dish.name,
+                quantity: ingredient.quantity,
+                scalingFactor: mealDish.scalingFactor
+              }
+            ]
+          };
+        }
+      });
+    });
+    
+    // Convert to array and sort by ingredient name
+    return Object.values(itemsMap).sort((a, b) => a.name.localeCompare(b.name));
+  }, [mealDishes, dishes, ingredients]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 px-1 sm:px-6">
@@ -250,6 +334,8 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
               // Get the dish to display its details
               const dish = dishes.find(d => d.id === mealDish.dishId);
               const dishNutrition = dish ? calculateDishNutrition(dish) : null;
+              const dishIngredients = dish ? dish.ingredients : [];
+              const isExpanded = expandedDishIngredients.includes(mealDish.dishId);
               
               return (
                 <Card key={index} className="overflow-hidden">
@@ -368,6 +454,39 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                               </div>
                             </div>
                           )}
+                          
+                          {/* Ingredient details */}
+                          <div className="pt-2">
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              className="w-full justify-between text-xs"
+                              onClick={() => toggleIngredientDetails(mealDish.dishId)}
+                            >
+                              <span>
+                                {dishIngredients.length} {dishIngredients.length === 1 ? 'ingredient' : 'ingredients'}
+                              </span>
+                              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </Button>
+                            
+                            {isExpanded && (
+                              <div className="pt-2 space-y-1 pl-2 border-t mt-2">
+                                {dishIngredients.length > 0 ? (
+                                  dishIngredients.map((ingredient, i) => (
+                                    <div key={i} className="flex justify-between text-xs">
+                                      <span>{getIngredientName(ingredient.ingredientId)}</span>
+                                      <span className="font-medium">
+                                        {Math.round(ingredient.quantity * mealDish.scalingFactor)}g
+                                      </span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-muted-foreground text-xs">No ingredients in this dish</p>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </>
                       )}
                     </div>
@@ -462,6 +581,68 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                   </div>
                 ))
               }
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Shopping List */}
+      {mealDishes.length > 0 && (
+        <div className="rounded-md border p-2 sm:p-4 space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium flex items-center">
+              <ShoppingBag className="h-4 w-4 mr-2" /> 
+              Shopping List
+            </h3>
+          </div>
+          
+          <div className="space-y-2">
+            {shoppingList.length > 0 ? (
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="shopping-list">
+                  <AccordionTrigger className="text-sm">
+                    View Complete Shopping List ({shoppingList.length} items)
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-2 pt-2">
+                      <table className="w-full text-sm">
+                        <thead className="border-b">
+                          <tr>
+                            <th className="text-left pb-2">Ingredient</th>
+                            <th className="text-right pb-2">Quantity</th>
+                            <th className="text-right pb-2">Used in</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {shoppingList.map((item) => (
+                            <tr key={item.ingredientId} className="border-b border-muted">
+                              <td className="py-2">{item.name}</td>
+                              <td className="text-right py-2">{Math.round(item.totalQuantity)}g</td>
+                              <td className="text-right py-2">
+                                <div className="flex flex-col items-end">
+                                  {item.dishes.map((dish, i) => (
+                                    <span key={i} className="text-xs text-muted-foreground">
+                                      {dish.dishName} ({dish.quantity}g × {dish.scalingFactor})
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            ) : (
+              <p className="text-muted-foreground text-sm">No ingredients to display</p>
+            )}
+            
+            <div className="pt-2">
+              <p className="text-sm text-muted-foreground">
+                This shopping list includes all ingredients needed for this meal with quantities adjusted for your scaling factors and servings.
+              </p>
             </div>
           </div>
         </div>
