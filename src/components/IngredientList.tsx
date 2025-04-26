@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Edit, Trash2, Salad } from "lucide-react";
@@ -166,7 +165,7 @@ const IngredientList = () => {
                   ? "You haven't added any ingredients yet."
                   : "No ingredients match your search."}
               </p>
-              {ingredients.length === 0 && (
+              {ingredients.length === 0 && searchQuery === "" && (
                 <Button onClick={handleAddNew}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add Your First Ingredient

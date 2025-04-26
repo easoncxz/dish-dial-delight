@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -7,7 +6,8 @@ import {
   Utensils, 
   ChevronRight, 
   Menu, 
-  X 
+  X,
+  Database
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,7 @@ const Navbar = () => {
     { path: "/", label: "Dashboard", icon: Home },
     { path: "/ingredients", label: "Ingredients", icon: Apple },
     { path: "/dishes", label: "Dishes", icon: Utensils },
+    { path: "/data", label: "Data Management", icon: Database },
   ];
   
   return (

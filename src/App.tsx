@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from "@/components/ui/toaster"
@@ -9,6 +8,7 @@ import Ingredients from './pages/Ingredients'
 import EditIngredient from './pages/EditIngredient'
 import Dishes from './pages/Dishes'
 import EditDish from './pages/EditDish'
+import DataManagement from './pages/DataManagement'
 import NotFound from './pages/NotFound'
 import './App.css'
 
@@ -27,6 +27,7 @@ function App() {
               <Route path="/dishes" element={<Dishes />} />
               <Route path="/dishes/new" element={<EditDish />} />
               <Route path="/dishes/edit/:id" element={<EditDish />} />
+              <Route path="/data" element={<DataManagement />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

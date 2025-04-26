@@ -166,7 +166,7 @@ const DishList = () => {
               className="pl-9 w-full sm:w-[300px]"
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <div className="bg-muted rounded-md p-0.5 flex items-center">
               <Button
                 variant={view === "card" ? "default" : "ghost"}
@@ -434,7 +434,7 @@ const DishList = () => {
                   ? "You haven't created any dishes yet."
                   : "No dishes match your search."}
               </p>
-              {dishes.length === 0 && (
+              {dishes.length === 0 && searchQuery === "" && (
                 <Button onClick={handleAddNew}>
                   <Plus className="mr-2 h-4 w-4" />
                   Create Your First Dish
