@@ -8,6 +8,7 @@ import Ingredients from './pages/Ingredients'
 import EditIngredient from './pages/EditIngredient'
 import Dishes from './pages/Dishes'
 import EditDish from './pages/EditDish'
+import Meals from './pages/Meals'
 import DataManagement from './pages/DataManagement'
 import NotFound from './pages/NotFound'
 import './App.css'
@@ -27,6 +28,7 @@ function App() {
               <Route path="/dishes" element={<Dishes />} />
               <Route path="/dishes/new" element={<EditDish />} />
               <Route path="/dishes/edit/:id" element={<EditDish />} />
+              <Route path="/meals" element={<Meals />} />
               <Route path="/data" element={<DataManagement />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

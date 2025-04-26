@@ -7,7 +7,8 @@ import {
   ChevronRight, 
   Menu, 
   X,
-  Database
+  Database,
+  Coffee
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const Navbar = () => {
     { path: "/", label: "Dashboard", icon: Home },
     { path: "/ingredients", label: "Ingredients", icon: Apple },
     { path: "/dishes", label: "Dishes", icon: Utensils },
+    { path: "/meals", label: "Meals", icon: Coffee },
     { path: "/data", label: "Data Management", icon: Database },
   ];
   

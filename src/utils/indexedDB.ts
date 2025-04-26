@@ -1,11 +1,11 @@
-
-import { Ingredient, Dish } from '@/types';
+import { Ingredient, Dish, Meal } from '@/types';
 
 // Database configuration
 const DB_NAME = 'meal-planner-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Increased version for new store
 const INGREDIENTS_STORE = 'ingredients';
 const DISHES_STORE = 'dishes';
+const MEALS_STORE = 'meals'; // New store for meals
 
 // Initialize the database
 export const initDatabase = (): Promise<IDBDatabase> => {
@@ -32,6 +32,11 @@ export const initDatabase = (): Promise<IDBDatabase> => {
       
       if (!db.objectStoreNames.contains(DISHES_STORE)) {
         db.createObjectStore(DISHES_STORE, { keyPath: 'id' });
+      }
+      
+      // Create the meals store if it doesn't exist
+      if (!db.objectStoreNames.contains(MEALS_STORE)) {
+        db.createObjectStore(MEALS_STORE, { keyPath: 'id' });
       }
     };
   });
@@ -108,15 +113,29 @@ export const storeDishes = (dishes: Dish[]): Promise<void> => {
   return saveAllItems<Dish>(DISHES_STORE, dishes);
 };
 
+// Meals specific functions
+export const getStoredMeals = (): Promise<Meal[]> => {
+  return getAllItems<Meal>(MEALS_STORE).catch(() => {
+    // If there's an error (e.g., store doesn't exist yet), return empty array
+    return [] as Meal[];
+  });
+};
+
+export const storeMeals = (meals: Meal[]): Promise<void> => {
+  return saveAllItems<Meal>(MEALS_STORE, meals);
+};
+
 // Export and import functions
 export const exportAllData = async (): Promise<string> => {
   try {
     const ingredients = await getStoredIngredients();
     const dishes = await getStoredDishes();
+    const meals = await getStoredMeals();
     
     const data = {
       ingredients,
       dishes,
+      meals,
       version: '1.0.0',
       exportDate: new Date().toISOString()
     };
@@ -128,7 +147,11 @@ export const exportAllData = async (): Promise<string> => {
   }
 };
 
-export const importAllData = async (jsonData: string): Promise<{ ingredients: Ingredient[], dishes: Dish[] }> => {
+export const importAllData = async (jsonData: string): Promise<{ 
+  ingredients: Ingredient[],
+  dishes: Dish[],
+  meals: Meal[]
+}> => {
   try {
     const data = JSON.parse(jsonData);
     
@@ -139,9 +162,15 @@ export const importAllData = async (jsonData: string): Promise<{ ingredients: In
     await storeIngredients(data.ingredients);
     await storeDishes(data.dishes);
     
+    // Handle meals if present
+    if (data.meals) {
+      await storeMeals(data.meals);
+    }
+    
     return {
       ingredients: data.ingredients,
-      dishes: data.dishes
+      dishes: data.dishes,
+      meals: data.meals || []
     };
   } catch (error) {
     console.error('Error importing data:', error);
