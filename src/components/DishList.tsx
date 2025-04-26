@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, Edit, Trash2, Utensils } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Utensils, Grid, List, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,20 @@ import { useData } from "@/context/DataContext";
 import { Dish, NutritionSummary } from "@/types";
 import DishForm from "./DishForm";
 import { calculateMacroPercentages } from "@/utils/calculations";
+import { 
+  Table, 
+  TableHeader, 
+  TableBody, 
+  TableRow, 
+  TableHead, 
+  TableCell 
+} from "@/components/ui/table";
+import { 
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem
+} from "@/components/ui/dropdown-menu";
 
 // Small MacroNutrient Pie Chart Component
 const MacroNutrientPieChart = ({ nutrition }: { nutrition: NutritionSummary }) => {
@@ -62,6 +76,7 @@ const DishList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
+  const [view, setView] = useState<"card" | "table">("card");
   
   const filteredDishes = useMemo(() => {
     return dishes.filter(dish => 
@@ -97,100 +112,212 @@ const DishList = () => {
               className="pl-9 w-full sm:w-[300px]"
             />
           </div>
-          <Button onClick={handleAddNew}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Dish
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="bg-muted rounded-md p-0.5 flex items-center">
+              <Button
+                variant={view === "card" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 px-2"
+                onClick={() => setView("card")}
+              >
+                <Grid className="h-4 w-4 mr-1" />
+                Cards
+              </Button>
+              <Button
+                variant={view === "table" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 px-2"
+                onClick={() => setView("table")}
+              >
+                <List className="h-4 w-4 mr-1" />
+                Table
+              </Button>
+            </div>
+            <Button onClick={handleAddNew}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Dish
+            </Button>
+          </div>
         </div>
         
         <AnimatePresence>
           {filteredDishes.length > 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-            >
-              {filteredDishes.map((dish) => {
-                const nutrition = calculateDishNutrition(dish);
-                
-                return (
-                  <motion.div
-                    key={dish.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    layout
-                  >
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg flex items-center">
-                          <div className="h-5 w-5 mr-2 text-primary flex items-center justify-center">
-                            <MacroNutrientPieChart nutrition={nutrition} />
-                          </div>
-                          {dish.name}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pb-2">
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1.5">Ingredients</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {dish.ingredients.length > 0 ? (
-                                dish.ingredients.map((item, index) => (
-                                  <Badge key={index} variant="secondary">
-                                    {getIngredientName(item.ingredientId)} ({item.quantity}g)
-                                  </Badge>
-                                ))
-                              ) : (
-                                <p className="text-sm text-muted-foreground">No ingredients</p>
-                              )}
+            <>
+              {view === "card" ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                >
+                  {filteredDishes.map((dish) => {
+                    const nutrition = calculateDishNutrition(dish);
+                    
+                    return (
+                      <motion.div
+                        key={dish.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        layout
+                      >
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-lg flex items-center">
+                              <div className="h-5 w-5 mr-2 text-primary flex items-center justify-center">
+                                <MacroNutrientPieChart nutrition={nutrition} />
+                              </div>
+                              {dish.name}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="pb-2">
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-xs text-muted-foreground mb-1.5">Ingredients</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {dish.ingredients.length > 0 ? (
+                                    dish.ingredients.map((item, index) => (
+                                      <Badge key={index} variant="secondary">
+                                        {getIngredientName(item.ingredientId)} ({item.quantity}g)
+                                      </Badge>
+                                    ))
+                                  ) : (
+                                    <p className="text-sm text-muted-foreground">No ingredients</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Calories</p>
+                                  <p className="font-medium">{Math.round(nutrition.calories)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Protein</p>
+                                  <p className="font-medium">{Math.round(nutrition.protein * 10) / 10}g</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Fiber</p>
+                                  <p className="font-medium">{Math.round(nutrition.fiber * 10) / 10}g</p>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            <div>
-                              <p className="text-xs text-muted-foreground">Calories</p>
-                              <p className="font-medium">{Math.round(nutrition.calories)}</p>
+                          </CardContent>
+                          <CardFooter className="pt-2">
+                            <div className="flex space-x-2 w-full">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={() => handleEdit(dish)}
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="flex-1 text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                                onClick={() => deleteDish(dish.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
                             </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">Protein</p>
-                              <p className="font-medium">{Math.round(nutrition.protein * 10) / 10}g</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">Fiber</p>
-                              <p className="font-medium">{Math.round(nutrition.fiber * 10) / 10}g</p>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="pt-2">
-                        <div className="flex space-x-2 w-full">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="flex-1"
-                            onClick={() => handleEdit(dish)}
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="flex-1 text-destructive hover:text-destructive-foreground hover:bg-destructive"
-                            onClick={() => deleteDish(dish.id)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
-                          </Button>
-                        </div>
-                      </CardFooter>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
+                          </CardFooter>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Dish</TableHead>
+                          <TableHead>Ingredients</TableHead>
+                          <TableHead className="text-right">Calories</TableHead>
+                          <TableHead className="text-right">Protein (g)</TableHead>
+                          <TableHead className="text-right">Carbs (g)</TableHead>
+                          <TableHead className="text-right">Fat (g)</TableHead>
+                          <TableHead className="text-right">Fiber (g)</TableHead>
+                          <TableHead className="w-[100px]">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredDishes.map((dish) => {
+                          const nutrition = calculateDishNutrition(dish);
+                          
+                          return (
+                            <TableRow key={dish.id}>
+                              <TableCell className="font-medium flex items-center">
+                                <div className="h-5 w-5 mr-2 flex items-center justify-center">
+                                  <MacroNutrientPieChart nutrition={nutrition} />
+                                </div>
+                                {dish.name}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-1.5 max-w-[250px]">
+                                  {dish.ingredients.length > 0 ? (
+                                    dish.ingredients.map((item, index) => (
+                                      <Badge key={index} variant="secondary" className="text-xs">
+                                        {getIngredientName(item.ingredientId)} ({item.quantity}g)
+                                      </Badge>
+                                    ))
+                                  ) : (
+                                    <p className="text-sm text-muted-foreground">None</p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                {Math.round(nutrition.calories)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {Math.round(nutrition.protein * 10) / 10}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {Math.round(nutrition.carbs * 10) / 10}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {Math.round(nutrition.fat * 10) / 10}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {Math.round(nutrition.fiber * 10) / 10}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEdit(dish)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive hover:bg-destructive/10"
+                                    onClick={() => deleteDish(dish.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </motion.div>
+              )}
+            </>
           ) : (
             <motion.div
               initial={{ opacity: 0 }}
