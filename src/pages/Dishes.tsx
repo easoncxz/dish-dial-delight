@@ -12,7 +12,7 @@ const Dishes = () => {
         title="Dishes" 
         description="Create and manage your favorite dishes" 
       />
-      <main className="container max-w-6xl">
+      <main className="max-w-6xl mx-auto">
         <DishList />
       </main>
     </div>

@@ -34,7 +34,7 @@ const EditMeal = () => {
   };
 
   return (
-    <main className="container max-w-4xl">
+    <main className="max-w-4xl mx-auto">
       <div className="mb-6">
         <Button
           variant="ghost"
