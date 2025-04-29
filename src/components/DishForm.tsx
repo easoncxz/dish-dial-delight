@@ -235,7 +235,12 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
                 <Card key={index}>
                   <CardContent className="p-2 sm:p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium text-sm sm:text-base truncate max-w-[180px] sm:max-w-full">{getIngredientName(item.ingredientId)}</div>
+                      <div className="font-medium text-sm sm:text-base truncate max-w-[180px] sm:max-w-full flex items-center">
+                        <div className="h-5 w-5 mr-2 flex items-center justify-center">
+                          <MacroNutrientPieChart ingredient={ingredients.find(ing => ing.id === item.ingredientId)} />
+                        </div>
+                        {getIngredientName(item.ingredientId)}
+                      </div>
                       <Button
                         type="button"
                         variant="ghost"
