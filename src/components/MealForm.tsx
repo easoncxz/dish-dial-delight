@@ -275,6 +275,11 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
     return Object.values(itemsMap).sort((a, b) => a.name.localeCompare(b.name));
   }, [mealDishes, dishes, ingredients]);
 
+  // Sort dishes alphabetically by name
+  const sortedDishes = useMemo(() => {
+    return [...dishes].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  }, [dishes]);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 px-1 sm:px-6">
       {/* Basic Meal Info */}
@@ -361,7 +366,7 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                               <SelectValue placeholder="Select a dish" />
                             </SelectTrigger>
                             <SelectContent>
-                              {dishes.map((dish) => (
+                              {sortedDishes.map((dish) => (
                                 <SelectItem key={dish.id} value={dish.id}>
                                   {dish.name}
                                 </SelectItem>
