@@ -1,24 +1,18 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { X, Plus, Trash2, Calculator, Edit, ExternalLink, ChevronDown, ChevronUp, ShoppingBag } from "lucide-react";
+import { X, Plus, Trash2, Calculator, Edit, ExternalLink, ChevronDown, ChevronUp, ShoppingBag, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useData } from "@/context/DataContext";
 import { Meal, Dish, MealDish, NutritionSummary, DishIngredient, Ingredient } from "@/types";
 import { calculateMacroPercentages } from "@/utils/calculations";
 import MacroNutrientPieChart from "./MacroNutrientPieChart";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 import {
   Accordion,
   AccordionContent,
@@ -280,6 +274,22 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
     return [...dishes].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
   }, [dishes]);
 
+  // Prepare dish options for SearchableSelect
+  const dishOptions = useMemo<SearchableSelectOption[]>(() => {
+    return sortedDishes.map(dish => {
+      const dishNutrition = calculateDishNutrition(dish);
+      return {
+        value: dish.id,
+        label: dish.name,
+        leftIcon: dishNutrition ? (
+          <div className="h-5 w-5 flex items-center justify-center">
+            <MacroNutrientPieChart nutrition={dishNutrition} />
+          </div>
+        ) : undefined
+      };
+    });
+  }, [sortedDishes, calculateDishNutrition]);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 px-1 sm:px-6">
       {/* Basic Meal Info */}
@@ -353,26 +363,13 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <Label className="text-sm">Select Dish</Label>
-                          <Select
+                          <SearchableSelect 
+                            options={dishOptions}
                             value={mealDish.dishId}
                             onValueChange={(value) => handleChangeDish(index, value)}
-                          >
-                            <SelectTrigger className="mt-1">
-                              {dish && dishNutrition && (
-                                <div className="h-5 w-5 mr-2 flex items-center justify-center">
-                                  <MacroNutrientPieChart nutrition={dishNutrition} />
-                                </div>
-                              )}
-                              <SelectValue placeholder="Select a dish" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {sortedDishes.map((dish) => (
-                                <SelectItem key={dish.id} value={dish.id}>
-                                  {dish.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            placeholder="Search for a dish..."
+                            emptyMessage="No dishes found"
+                          />
                         </div>
                         <div className="flex items-center ml-2">
                           <Button

@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 import NutritionDisplay from "./NutritionDisplay";
 import MacroNutrientPieChart from "./MacroNutrientPieChart";
 import { Dish, DishIngredient } from "@/types";
@@ -35,6 +35,19 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
       .filter(ing => !dishIngredients.some(item => item.ingredientId === ing.id))
       .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
   }, [ingredients, dishIngredients]);
+  
+  // Convert ingredients to options format for SearchableSelect with pie charts
+  const ingredientOptions = useMemo<SearchableSelectOption[]>(() => {
+    return availableIngredients.map(ingredient => ({
+      value: ingredient.id,
+      label: ingredient.name,
+      leftIcon: (
+        <div className="h-5 w-5 flex items-center justify-center">
+          <MacroNutrientPieChart ingredient={ingredient} />
+        </div>
+      )
+    }));
+  }, [availableIngredients]);
   
   const nutrition = useMemo(() => {
     const dishData: Dish = {
@@ -194,29 +207,13 @@ const DishForm = ({ existingDish, onComplete }: DishFormProps) => {
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <Label htmlFor="ingredient-select">Add Ingredient</Label>
-            <Select 
-              value={selectedIngredientId} 
-              onValueChange={(value) => {
-                setSelectedIngredientId(value);
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select ingredient" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableIngredients.length > 0 ? (
-                  availableIngredients.map(ingredient => (
-                    <SelectItem key={ingredient.id} value={ingredient.id}>
-                      {ingredient.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="none" disabled>
-                    No ingredients available
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={ingredientOptions}
+              value={selectedIngredientId}
+              onValueChange={(value) => setSelectedIngredientId(value)}
+              placeholder="Search ingredients..."
+              emptyMessage="No ingredients found"
+            />
           </div>
           <Button
             type="button"
