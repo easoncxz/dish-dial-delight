@@ -30,8 +30,8 @@ function App() {
               <Route path="/dishes/new" element={<EditDish />} />
               <Route path="/dishes/edit/:id" element={<EditDish />} />
               <Route path="/meals" element={<Meals />} />
-              <Route path="/meals/new" element={<EditMeal />} />
-              <Route path="/meals/edit/:id" element={<EditMeal />} />
+              <Route path="/meals/new" element={<EditMeal isCreating={true} />} />
+              <Route path="/meals/edit/:id" element={<EditMeal isCreating={false} />} />
               <Route path="/data" element={<DataManagement />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
