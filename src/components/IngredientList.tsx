@@ -10,6 +10,7 @@ import { useData } from "@/context/DataContext";
 import { Ingredient, NutritionSummary } from "@/types";
 import IngredientForm from "./IngredientForm";
 import { calculateMacroPercentages } from "@/utils/calculations";
+import MacroNutrientPieChart from "./MacroNutrientPieChart";
 import { 
   Table, 
   TableHeader, 
@@ -19,89 +20,8 @@ import {
   TableCell 
 } from "@/components/ui/table";
 
-// Small MacroNutrient Pie Chart Component
-const MacroNutrientPieChart = ({ ingredient }: { ingredient: Ingredient }) => {
-  const chartRef = useRef<HTMLDivElement>(null);
-  const nutrition: NutritionSummary = {
-    calories: ingredient.calories,
-    protein: ingredient.protein,
-    carbs: ingredient.carbs,
-    fat: ingredient.fat,
-    fiber: ingredient.fiber,
-    nutrients: ingredient.nutrients || {}
-  };
-  const macros = calculateMacroPercentages(nutrition);
-  
-  // Render the pie chart using divs
-  useEffect(() => {
-    if (!chartRef.current) return;
-    const chart = chartRef.current;
-    
-    // Clear previous chart
-    chart.innerHTML = "";
-    
-    let cumulativeAngle = 0;
-    
-    macros.forEach((macro) => {
-      if (macro.value <= 0) return;
-      
-      const segment = document.createElement("div");
-      segment.className = "absolute inset-0";
-      
-      // Calculate segment styles
-      const startAngle = cumulativeAngle;
-      const angleSize = (macro.value / 100) * 360;
-      cumulativeAngle += angleSize;
-      
-      // Set the clip path for the segment
-      segment.style.backgroundColor = macro.color;
-      segment.style.clipPath = `path('M ${10} ${10} L ${10 + 10 * Math.cos((startAngle * Math.PI) / 180)} ${
-        10 + 10 * Math.sin((startAngle * Math.PI) / 180)
-      } A 10 10 0 ${angleSize > 180 ? 1 : 0} 1 ${10 + 10 * Math.cos(((startAngle + angleSize) * Math.PI) / 180)} ${
-        10 + 10 * Math.sin(((startAngle + angleSize) * Math.PI) / 180)
-      } Z')`;
-      
-      chart.appendChild(segment);
-    });
-  }, [macros]);
 
-  return (
-    <div className="relative w-[20px] h-[20px] rounded-full">
-      <div ref={chartRef} className="absolute inset-0 rounded-full overflow-hidden" />
-      <div className="absolute inset-0 rounded-full border border-muted-foreground/10" />
-    </div>
-  );
-};
-
-// Component for the macro distribution border
-const MacroDistributionBorder = ({ ingredient }: { ingredient: Ingredient }) => {
-  const nutrition: NutritionSummary = {
-    calories: ingredient.calories,
-    protein: ingredient.protein,
-    carbs: ingredient.carbs,
-    fat: ingredient.fat,
-    fiber: ingredient.fiber,
-    nutrients: ingredient.nutrients || {}
-  };
-  const macros = calculateMacroPercentages(nutrition);
-  
-  return (
-    <div className="absolute top-0 left-0 right-0 h-4 flex">
-      {macros.map((macro, index) => (
-        macro.value > 0 ? (
-          <div 
-            key={index} 
-            style={{ 
-              width: `${macro.value}%`,
-              background: `linear-gradient(to bottom, ${macro.color} 0%, transparent 100%)`
-            }} 
-            className="h-full"
-          />
-        ) : null
-      ))}
-    </div>
-  );
-};
+import MacroDistributionBorder from "./MacroDistributionBorder";
 
 const IngredientList = () => {
   const { ingredients, deleteIngredient } = useData();
