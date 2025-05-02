@@ -598,6 +598,18 @@ const MealForm = ({ existingMeal, onComplete }: MealFormProps) => {
               }
             </div>
           </div>
+
+          {/* Large Pie Chart Display */}
+          <div className="mt-4 pt-4 border-t flex justify-center">
+            <div className="flex flex-col items-center">
+              <div className="h-32 w-32 mb-2">
+                <MacroNutrientPieChart nutrition={nutritionPerServing || nutritionSummary} size={128} />
+              </div>
+              <p className="text-xs text-center text-muted-foreground mt-1">
+                Macronutrient breakdown per serving
+              </p>
+            </div>
+          </div>
         </div>
       )}
       
