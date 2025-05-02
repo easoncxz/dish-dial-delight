@@ -4,9 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>dish-dial-delight</title>
-    <meta name="description" content="Lovable Generated Project" />
+    <meta name="description" content="A meal planning and nutrition tracking application" />
     <meta name="author" content="Lovable" />
     <meta property="og:image" content="/og-image.png" />
+    
+    <!-- PWA meta tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1e293b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DishDial" />
+    <link rel="apple-touch-icon" href="/pwa-icon-192.png" />
   </head>
 
   <body>
@@ -14,5 +22,13 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Add fallback for browsers without JavaScript -->
+    <noscript>
+      <div style="padding: 2rem; text-align: center;">
+        <h1>JavaScript Required</h1>
+        <p>This application requires JavaScript to function. Please enable JavaScript in your browser settings.</p>
+      </div>
+    </noscript>
   </body>
 </html>
